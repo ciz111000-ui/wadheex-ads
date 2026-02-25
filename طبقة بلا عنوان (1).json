@@ -1,0 +1,3 @@
+{"type":"FeatureCollection", "features": [
+{"type":"Feature","geometry":{"type":"Point","coordinates":[46.6515836,24.7023187,0]},"properties":{"name":"شينوا","styleUrl":"#icon-1899-0288D1-nodesc","icon-opacity":1,"icon-color":"#0288d1","icon-scale":1,"icon-offset":[32,64],"icon-offset-units":["pixels","insetPixels"],"icon":"https://www.gstatic.com/mapspro/images/stock/503-wht-blank_maps.png"}}
+]}
