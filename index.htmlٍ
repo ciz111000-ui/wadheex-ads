@@ -21,7 +21,7 @@ body { margin:0; }
 
 <script>
 
-mapboxgl.accessToken = 'PUT_YOUR_MAPBOX_TOKEN_HERE';
+mapboxgl.accessToken =
 
 const map = new mapboxgl.Map({
 container: 'map',
