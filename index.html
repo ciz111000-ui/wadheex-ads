@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Wadheex Ads Map</title>
+<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+<link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+<style>
+body { margin:0; padding:0; }
+#map { position:absolute; top:0; bottom:0; width:100%; }
+</style>
+</head>
+<body>
+<div id="map"></div>
+
+<script>
+mapboxgl.accessToken = pk.eyJ1IjoibjktN3Z2IiwiYSI6ImNtbTJubnJjMDA4OGEycXNnaXN2M21lZ3QifQ.yZPWMAgrnQxnwZZdr8kwjA
+
+const map = new mapboxgl.Map({
+container: 'map',
+style: 'mapbox://styles/mapbox/streets-v11',
+center: [46.67,24.74],
+zoom: 11
+});
+
+async function loadGeo(){
+const s1 = await fetch('./screen-1.geojson').then(r=>r.json());
+const s2 = await fetch('./screen-2.geojson').then(r=>r.json());
+const s3 = await fetch('./screen-3.geojson').then(r=>r.json());
+
+return [
+{id:"screen-1", geo:s1},
+{id:"screen-2", geo:s2},
+{id:"screen-3", geo:s3}
+];
+}
+
+let marker;
+
+map.on('click', async (e)=>{
+
+if(marker) marker.remove();
+
+marker = new mapboxgl.Marker()
+.setLngLat([e.lngLat.lng, e.lngLat.lat])
+.addTo(map);
+
+const screens = await loadGeo();
+const point = turf.point([e.lngLat.lng, e.lngLat.lat]);
+
+let inside=[];
+
+screens.forEach(s=>{
+if(turf.booleanPointInPolygon(point, s.geo)){
+inside.push(s.id);
+}
+});
+
+if(inside.length>0){
+alert("أقرب شاشة تخدم منشأتك هي: "+inside[0]);
+}else{
+alert("لا يوجد شاشة ضمن نطاق 10 دقائق");
+}
+});
+</script>
+</body>
+</html>
