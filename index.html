@@ -33,7 +33,7 @@ z-index:999;
 ">
 تقديم طلب إعلان
 </button>
-  <script>
+  <script> let insideArea = false;
     // ✅ توكنك
     mapboxgl.accessToken = "pk.eyJ1IjoibjktN3Z2IiwiYSI6ImNtbTJubnJjMDA4OGEycXNnaXN2M21lZ3QifQ.yZPWMAgrnQxnwZZdr8kwjA";
 
@@ -46,7 +46,7 @@ z-index:999;
 
     let marker = null;
     let areaFeature = null; // Feature (Polygon) جاهز للفحص داخل/خارج
-
+    let insideArea = false;
     // ---- إصلاح تلقائي لإحداثيات مضلع الرياض (لو كانت مقلوبة lat/lng) ----
     function swapIfLatLng(p) {
       const a = p[0], b = p[1];
@@ -173,10 +173,8 @@ z-index:999;
       if (marker) marker.remove();
       marker = new mapboxgl.Marker().setLngLat(e.lngLat).addTo(map);
 
-      const pt = turf.point([e.lngLat.lng, e.lngLat.lat]);
-      const inside = turf.booleanPointInPolygon(pt, areaFeature);
-
-      alert(inside ? "داخل النطاق ✅" : "خارج النطاق ❌");
+      insideArea = turf.booleanPointInPolygon(pt, areaFeature);
+alert(insideArea ? "داخل النطاق ✅" : "خارج النطاق ❌");
     });
   </script>
 </body>
