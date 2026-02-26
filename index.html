@@ -1,7 +1,8 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="ar">
 <head>
   <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Wadheex Ads</title>
 
   <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
@@ -9,8 +10,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
 
   <style>
-    html, body { height: 100%; margin: 0; }
-    #map { width: 100%; height: 100%; }
+    html, body { height:100%; margin:0; }
+    #map { width:100%; height:100%; }
   </style>
 </head>
 
@@ -18,6 +19,7 @@
   <div id="map"></div>
 
   <script>
+    // ✅ توكنك
     mapboxgl.accessToken = "pk.eyJ1IjoibjktN3Z2IiwiYSI6ImNtbTJubnJjMDA4OGEycXNnaXN2M21lZ3QifQ.yZPWMAgrnQxnwZZdr8kwjA";
 
     const map = new mapboxgl.Map({
@@ -27,74 +29,134 @@
       zoom: 11
     });
 
-    let marker;
-    let areaFeature; // نخزن هنا شكل النطاق
+    let marker = null;
+    let areaFeature = null; // Feature (Polygon) جاهز للفحص داخل/خارج
+
+    // ---- إصلاح تلقائي لإحداثيات مضلع الرياض (لو كانت مقلوبة lat/lng) ----
+    function swapIfLatLng(p) {
+      const a = p[0], b = p[1];
+      // غالباً في الرياض: lat بين 20-30 ، lng بين 40-55
+      // لو جاية [lat,lng] نقلبها
+      if (a > 15 && a < 35 && b > 35 && b < 60) return [b, a];
+      return p; // هي صح أصلاً
+    }
+
+    function closeRing(ring) {
+      if (!ring || ring.length < 3) return ring;
+      const first = ring[0];
+      const last  = ring[ring.length - 1];
+      if (first[0] !== last[0] || first[1] !== last[1]) ring.push(first);
+      return ring;
+    }
+
+    function fixPolygonFeature(feature) {
+      // يدعم Polygon و MultiPolygon (ياخذ أول Polygon)
+      if (!feature || !feature.geometry) throw new Error("GeoJSON feature غير صحيح");
+
+      if (feature.geometry.type === "MultiPolygon") {
+        // خذ أول مضلع
+        feature = {
+          type: "Feature",
+          properties: feature.properties || {},
+          geometry: {
+            type: "Polygon",
+            coordinates: feature.geometry.coordinates[0]
+          }
+        };
+      }
+
+      if (feature.geometry.type !== "Polygon") {
+        throw new Error("لازم يكون Polygon أو MultiPolygon (مو LineString)");
+      }
+
+      // اصلاح الحلقة الأولى فقط
+      let ring = feature.geometry.coordinates[0];
+      ring = ring.map(swapIfLatLng);
+      ring = closeRing(ring);
+
+      feature.geometry.coordinates[0] = ring;
+      return feature;
+    }
 
     async function loadArea() {
-      const res = await fetch("./screen-1.geojson");
-      if (!res.ok) throw new Error("ما قدر يقرأ screen-1.geojson");
+      const res = await fetch("./screen-1.geojson", { cache: "no-store" });
+      if (!res.ok) throw new Error("ملف screen-1.geojson ما انقرأ. تأكد اسمه ومساره");
 
       const geo = await res.json();
 
-      // إذا الملف FeatureCollection
+      let feature;
+
       if (geo.type === "FeatureCollection") {
-        if (!geo.features || geo.features.length === 0) throw new Error("FeatureCollection فاضي");
-        areaFeature = geo.features[0];
-        return geo;
+        feature = geo.features && geo.features[0];
+      } else if (geo.type === "Feature") {
+        feature = geo;
+      } else if (Array.isArray(geo)) {
+        // لو كان مجرد array coords
+        feature = {
+          type: "Feature",
+          properties: {},
+          geometry: { type: "Polygon", coordinates: [geo] }
+        };
+      } else {
+        throw new Error("صيغة screen-1.geojson غير مفهومة");
       }
 
-      // إذا الملف Feature واحد
-      areaFeature = geo;
-      return { type: "FeatureCollection", features: [geo] };
+      feature = fixPolygonFeature(feature);
+
+      // خزّن Feature للفحص داخل/خارج
+      areaFeature = feature;
+
+      // رجّع FeatureCollection للرسم
+      return { type: "FeatureCollection", features: [feature] };
     }
 
-    // ✅ هنا نحمّل النطاق ونرسم البرتقالي مرة وحدة
     map.on("load", async () => {
       try {
-        const area = await loadArea();
+        const areaFC = await loadArea();
 
-        map.addSource("screen-area", { type: "geojson", data: area });
+        map.addSource("screen-area", { type: "geojson", data: areaFC });
 
-        // تعبئة برتقالية
+        // تعبئة برتقالي
         map.addLayer({
           id: "screen-fill",
           type: "fill",
           source: "screen-area",
           paint: {
             "fill-color": "#ff6600",
-            "fill-opacity": 0.3
+            "fill-opacity": 0.30
           }
         });
 
-        // حد خارجي (عشان ما “يختفي” بصريًا)
+        // حدّ برتقالي (عشان يبان واضح)
         map.addLayer({
           id: "screen-outline",
           type: "line",
           source: "screen-area",
           paint: {
-            "line-color": "#ff6600",
+            "line-color": "#ff3300",
             "line-width": 2
           }
         });
 
+        // تقريب تلقائي على النطاق
+        const bbox = turf.bbox(areaFC);
+        map.fitBounds(bbox, { padding: 30, duration: 600 });
+
       } catch (err) {
-        alert("خطأ في تحميل النطاق: " + err.message);
+        alert("خطأ في تحميل/رسم النطاق: " + err.message);
         console.error(err);
       }
     });
 
-    // ✅ حدث واحد فقط للضغط
+    // ✅ كليك واحد فقط: يحط ماركر + يقول داخل/خارج
     map.on("click", (e) => {
       if (!areaFeature) {
-        alert("النطاق ما انحمّل للحين… انتظر ثانيتين وجرب");
+        alert("النطاق ما انحمّل للحين…");
         return;
       }
 
       if (marker) marker.remove();
-
-      marker = new mapboxgl.Marker()
-        .setLngLat([e.lngLat.lng, e.lngLat.lat])
-        .addTo(map);
+      marker = new mapboxgl.Marker().setLngLat(e.lngLat).addTo(map);
 
       const pt = turf.point([e.lngLat.lng, e.lngLat.lat]);
       const inside = turf.booleanPointInPolygon(pt, areaFeature);
