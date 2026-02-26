@@ -43,26 +43,27 @@ async function loadArea() {
   }
 }
 
-map.on("load", async ()=>{
+map.on("click", async (e)=>{
 
-  const area = await loadArea();
+  if (!areaFeature) {
+    alert("النطاق ما انحمّل للحين… اصبر ثانيتين وجرّب");
+    return;
+  }
 
-  map.addSource("screen-area",{
-    type:"geojson",
-    data:area
-  });
+  if(marker) marker.remove();
 
-  map.addLayer({
-    id:"screen-fill",
-    type:"fill",
-    source:"screen-area",
-    paint:{
-      "fill-color":"#ff6600",
-      "fill-opacity":0.3
-    }
-  });
+  marker = new mapboxgl.Marker()
+    .setLngLat([e.lngLat.lng, e.lngLat.lat])
+    .addTo(map);
 
-  map.on("click",(e)=>{
+  const point = turf.point([e.lngLat.lng, e.lngLat.lat]);
+  const inside = turf.booleanPointInPolygon(point, areaFeature);
+
+  alert(inside ? "داخل النطاق ✅" : "خارج النطاق ❌");
+
+});
+
+  map.on("click", async (e)=>{
 
     if(marker) marker.remove();
 
@@ -70,16 +71,11 @@ map.on("load", async ()=>{
     .setLngLat([e.lngLat.lng,e.lngLat.lat])
     .addTo(map);
 
-    const pt = turf.point([e.lngLat.lng,e.lngLat.lat]);
-    const inside = turf.booleanPointInPolygon(pt,areaFeature);
+   const point = turf.point([e.lngLat.lng, e.lngLat.lat]);
 
-    new mapboxgl.Popup()
-    .setLngLat([e.lngLat.lng,e.lngLat.lat])
-    .setHTML( inside ? "✅ داخل نطاق الشاشة" : "❌ خارج النطاق")
-    .addTo(map);
+const inside = turf.booleanPointInPolygon(point, areaFeature);
 
-  });
-
+alert(inside ? "✅ داخل النطاق" : "❌ خارج النطاق");
 });
 </script>
 </body>
