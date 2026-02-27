@@ -27,7 +27,7 @@
 html,body{height:100%;margin:0;font-family:"Tajawal",sans-serif;background:#050509;overflow:hidden}
 #map{position:absolute;inset:0;width:100%;height:100%}
 
-/* زر القائمة الطولي المثبت على الحافة */
+/* زر القائمة الطولي المثبت على الحافة (ثابت وعمودي داخل الحافة) */
 .panel-toggle{
   position:fixed;
   right:0;
@@ -49,6 +49,7 @@ html,body{height:100%;margin:0;font-family:"Tajawal",sans-serif;background:#0505
   text-orientation:mixed;
   letter-spacing:2px;
   box-shadow:0 6px 18px rgba(0,0,0,0.5);
+  user-select:none;
 }
 
 /* عندما تكون اللوحة مفتوحة نحرّك الزر ليبقى ملتصقًا بحافة اللوحة */
@@ -201,7 +202,7 @@ button:disabled{background:#444;cursor:not-allowed}
 </div>
 
 <script>
-/* Supabase config */
+/* -------------------- إعداد Supabase -------------------- */
 const supabaseUrl = "https://wtoefcpjbudkuqjmymjp.supabase.co";
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0b2VmY3BqYnVka3Vxam15bWpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMDY4NTksImV4cCI6MjA4Nzc4Mjg1OX0.SZpo2lShgfOdZqNwE74pZUjNovrjO26JE31bRs1xuvg";
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
@@ -209,7 +210,9 @@ const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 /* WhatsApp owner (رقمك بصيغة دولية بدون +) */
 let ownerWhatsApp = "966583611252"; // رقمك: 0583611252 -> 966583611252
 
+/* -------------------- DOM ready -------------------- */
 document.addEventListener('DOMContentLoaded', () => {
+
   /* Mapbox init */
   mapboxgl.accessToken = "pk.eyJ1IjoibjktN3Z2IiwiYSI6ImNtbTJubnJjMDA4OGEycXNnaXN2M21lZ3QifQ.yZPWMAgrnQxnwZZdr8kwjA";
   const map = new mapboxgl.Map({
@@ -312,6 +315,47 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById("priceBox").dataset.distance = dist.toFixed(2);
   }
 
+  /* -------------------- تسجيل/حجز محسّن -------------------- */
+
+  // استمع لتغير حالة المصادقة لتحديث الواجهة فورًا
+  supabaseClient.auth.onAuthStateChange((event, session) => {
+    refreshUser();
+  });
+
+  async function trySignIn(email, pass){
+    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
+    if (error) throw error;
+    return data;
+  }
+
+  async function trySignUp(email, pass){
+    const { data, error } = await supabaseClient.auth.signUp({ email, password: pass });
+    if (error) throw error;
+    return data;
+  }
+
+  async function ensureUserAndReturnEmail(email){
+    // تأكد إن المستخدم مسجل حالياً
+    try{
+      const { data } = await supabaseClient.auth.getUser();
+      if (data && data.user) return data.user.email;
+    }catch(e){}
+    // إذا لا يوجد مستخدم مسجل، أنشئ حساب مؤقت
+    const tempPass = Math.random().toString(36).slice(-10) + "A1!";
+    try{
+      const { error } = await supabaseClient.auth.signUp({ email, password: tempPass });
+      if (error){
+        // إذا فشل التسجيل، رمي الخطأ ليتعامل معه المستدعي
+        throw error;
+      }
+      // نُعلم المستخدم أنه تم إنشاء حساب (قد يحتاج تفعيل)
+      alert("تم إنشاء حساب تلقائيًا. تحقق من بريدك الإلكتروني لتفعيل الحساب إذا لزم الأمر.");
+      return email;
+    }catch(err){
+      throw err;
+    }
+  }
+
   /* حجز */
   document.getElementById("bookBtn").addEventListener("click", async ()=>{
     const orgName = document.getElementById("orgName").value.trim();
@@ -323,21 +367,27 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!/^05\d{8}$/.test(phone)){ alert("رقم الجوال غير صحيح. يجب أن يكون بصيغة 05xxxxxxxx"); return; }
     if (!selectedScreen){ alert("الرجاء اختيار شاشة من الخريطة."); return; }
 
+    // احصل على المستخدم الحالي
     let userEmail = null;
-    try{ const { data } = await supabaseClient.auth.getUser(); if (data && data.user) userEmail = data.user.email; }catch(e){}
+    try{
+      const { data } = await supabaseClient.auth.getUser();
+      if (data && data.user) userEmail = data.user.email;
+    }catch(e){}
 
+    // إذا لا يوجد مستخدم مسجل، أنشئ حساب تلقائيًا باستخدام البريد في الحقل
     if (!userEmail){
       const emailInput = document.getElementById("authEmail").value.trim();
       if (!emailInput){ alert("الرجاء إدخال بريد إلكتروني في قسم الحساب لإنشاء حساب تلقائي."); return; }
-      const randomPass = Math.random().toString(36).slice(-10) + "A1!";
       try{
-        const { error: signUpError } = await supabaseClient.auth.signUp({ email: emailInput, password: randomPass });
-        if (signUpError){ console.warn("signUpError:", signUpError.message); alert("تعذر إنشاء حساب تلقائي. حاول تسجيل الدخول يدوياً."); return; }
-        userEmail = emailInput;
-        alert("تم إنشاء حساب تلقائيًا. تحقق من بريدك الإلكتروني لتفعيل الحساب إذا لزم الأمر.");
-      }catch(e){ alert("حدث خطأ أثناء إنشاء الحساب التلقائي. حاول تسجيل الدخول يدوياً."); return; }
+        userEmail = await ensureUserAndReturnEmail(emailInput);
+      }catch(err){
+        alert("تعذر إنشاء حساب تلقائي. حاول تسجيل الدخول يدوياً.");
+        console.error("ensureUser error:", err);
+        return;
+      }
     }
 
+    // جهّز بيانات الحجز
     const priceText = document.getElementById("priceBox").textContent || "";
     const priceValue = document.getElementById("priceBox").dataset.price || null;
     const baseValue = document.getElementById("priceBox").dataset.base || null;
@@ -359,12 +409,20 @@ document.addEventListener('DOMContentLoaded', () => {
       created_at: new Date().toISOString()
     };
 
+    // حاول إدخال الحجز في جدول bookings داخل Supabase
     try{
       const { error: insertError } = await supabaseClient.from('bookings').insert([bookingData]);
-      if (insertError) console.warn("Insert booking error:", insertError.message);
-      else console.log("Booking saved to Supabase bookings table.");
-    }catch(e){ console.warn("Exception inserting booking:", e); }
+      if (insertError){
+        console.warn("Insert booking error:", insertError.message);
+        // نتابع إرسال واتساب حتى لو لم يُخزن
+      } else {
+        console.log("Booking saved to Supabase bookings table.");
+      }
+    }catch(e){
+      console.warn("Exception inserting booking:", e);
+    }
 
+    // إرسال رسالة واتساب للمالك
     const owner = ownerWhatsApp || "";
     const msg = encodeURIComponent(
       `طلب حجز شاشة\n` +
@@ -379,18 +437,17 @@ document.addEventListener('DOMContentLoaded', () => {
       `رقم التواصل: ${bookingData.phone}`
     );
 
-    if (owner && owner !== "966583611252"){
+    if (owner){
       window.open(`https://wa.me/${owner}?text=${msg}`, "_blank");
     } else {
-      // نفتح واتساب حتى لو كان الرقم هو رقمك؛ إذا لم ترد فتح نافذة جديدة، احذف الشرط أعلاه
-      window.open(`https://wa.me/${owner}?text=${msg}`, "_blank");
+      console.log("WhatsApp message:", decodeURIComponent(msg));
     }
 
     alert("تم استلام طلب الحجز بنجاح.\nسيتم التواصل معك لتأكيد التفاصيل.");
     startCountdown(startDate);
   });
 
-  /* عداد تنازلي */
+  /* -------------------- عداد تنازلي -------------------- */
   let countdownInterval = null;
   function startCountdown(startDateStr){
     const countdownBox = document.getElementById("countdownBox");
@@ -405,7 +462,7 @@ document.addEventListener('DOMContentLoaded', () => {
     },1000);
   }
 
-  /* auth handlers */
+  /* -------------------- auth handlers (محسّنة) -------------------- */
   document.getElementById("signupBtn").addEventListener("click", async ()=>{
     const email = document.getElementById("authEmail").value.trim();
     const pass = document.getElementById("authPassword").value.trim();
@@ -415,7 +472,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (error){ alert("خطأ في إنشاء الحساب: " + error.message); return; }
       alert("تم إنشاء الحساب بنجاح، تحقق من بريدك الإلكتروني.");
       refreshUser();
-    }catch(e){ alert("تعذر الاتصال بالخادم."); }
+    }catch(e){ alert("تعذر الاتصال بالخادم."); console.error(e); }
   });
 
   document.getElementById("loginBtn").addEventListener("click", async ()=>{
@@ -423,15 +480,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const pass = document.getElementById("authPassword").value.trim();
     if (!email || !pass){ alert("الرجاء إدخال البريد وكلمة المرور"); return; }
     try{
-      const { error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
       if (error){ alert("خطأ في تسجيل الدخول: " + error.message); return; }
       alert("تم تسجيل الدخول بنجاح");
       refreshUser();
-    }catch(e){ alert("تعذر الاتصال بالخادم."); }
+    }catch(e){ alert("تعذر الاتصال بالخادم."); console.error(e); }
   });
 
   document.getElementById("logoutBtn").addEventListener("click", async ()=>{
-    try{ await supabaseClient.auth.signOut(); }catch(e){}
+    try{ await supabaseClient.auth.signOut(); }catch(e){ console.error(e); }
     window.localUser = null;
     refreshUser();
   });
@@ -453,6 +510,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById("userPanel").style.display = "none";
       }
     }catch(e){
+      console.error("refreshUser error:", e);
       if (window.localUser){
         document.getElementById("authForms").style.display = "none";
         document.getElementById("userPanel").style.display = "block";
@@ -466,7 +524,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   refreshUser();
 
-  /* زر القائمة: تحكم بالموضع ليلتصق باللوحة أو بالحافة */
+  /* -------------------- زر القائمة: موضع ثابت داخل الحافة -------------------- */
   const panel = document.getElementById('panel');
   const panelToggle = document.getElementById('panelToggle');
   const closeBtn = document.getElementById('closeBtn');
