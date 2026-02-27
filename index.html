@@ -3,103 +3,94 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Wadheex X | منصة الحجز الذاتي</title>
+<title>Wadheex X</title>
 
 <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
 <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
 
-<link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.1/mapbox-gl-geocoder.css" />
-<script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.1/mapbox-gl-geocoder.min.js"></script>
-
 <style>
-:root{
-  --primary:#ff3b3b;
-  --blue:#007bff;
-  --bg:#0f1724;
-  --card:#121b2e;
-}
-
-html,body{
+body,html{
   margin:0;
   height:100%;
   font-family:system-ui;
-  background:var(--bg);
-  color:#fff;
+  background:#0b0f18;
 }
 
 #map{
   position:absolute;
   top:0;
-  left:0;
-  right:0;
   bottom:0;
+  width:100%;
 }
 
 .panel{
   position:absolute;
-  top:0;
-  right:0;
-  width:380px;
-  max-width:100%;
-  height:100%;
-  background:var(--card);
+  right:20px;
+  top:20px;
+  width:360px;
+  max-width:95%;
+  backdrop-filter:blur(20px);
+  background:rgba(20,25,40,0.75);
+  border-radius:20px;
   padding:20px;
-  overflow:auto;
-  z-index:10;
-  box-shadow:-10px 0 30px rgba(0,0,0,.4);
+  color:#fff;
+  box-shadow:0 10px 40px rgba(0,0,0,.5);
 }
 
 .panel h2{
-  margin-top:0;
+  margin:0 0 10px;
+  font-size:20px;
 }
 
 .input{
   width:100%;
-  padding:10px;
-  margin:6px 0;
-  border-radius:8px;
+  padding:12px;
+  border-radius:12px;
   border:none;
+  margin:8px 0;
+  font-size:14px;
+}
+
+.stat{
+  background:rgba(255,255,255,0.05);
+  padding:10px;
+  border-radius:10px;
+  margin-top:6px;
+  font-size:14px;
 }
 
 .btn{
   width:100%;
   padding:12px;
   border:none;
-  border-radius:10px;
-  cursor:pointer;
+  border-radius:14px;
   margin-top:10px;
+  cursor:pointer;
   font-weight:bold;
 }
 
-.btn-primary{background:var(--primary);color:#fff;}
-.btn-blue{background:var(--blue);color:#fff;}
-
-.stat{
-  background:#1c2740;
-  padding:10px;
-  margin-top:8px;
-  border-radius:8px;
-  font-size:14px;
+.btn-primary{
+  background:#ff3b3b;
+  color:#fff;
 }
 
-.preview-box{
+.preview{
+  height:100px;
   background:#000;
-  height:120px;
+  margin-top:10px;
+  border-radius:12px;
   display:flex;
   align-items:center;
   justify-content:center;
-  margin-top:10px;
-  border-radius:8px;
   font-weight:bold;
 }
 
-@media(max-width:900px){
+@media(max-width:768px){
   .panel{
-    width:100%;
-    height:50%;
     bottom:0;
     top:auto;
+    width:100%;
     border-radius:20px 20px 0 0;
   }
 }
@@ -109,26 +100,22 @@ html,body{
 
 <div id="map"></div>
 
-<aside class="panel">
-  <h2>Wadheex X</h2>
+<div class="panel">
+<h2>Wadheex X</h2>
 
-  <input id="businessName" class="input" placeholder="اسم المنشأة" />
-  <input id="phoneInput" class="input" placeholder="رقم التواصل" />
+<input id="business" class="input" placeholder="اسم المنشأة" />
 
-  <div class="stat" id="distanceStat">المسافة: -</div>
-  <div class="stat" id="priceStat">السعر: -</div>
-  <div class="stat" id="etaStat">وقت الوصول: -</div>
-  <div class="stat" id="aiStat">مؤشر الموقع: -</div>
+<div id="distance" class="stat">المسافة: -</div>
+<div id="price" class="stat">السعر: -</div>
+<div id="eta" class="stat">وقت الوصول: -</div>
 
-  <button class="btn btn-blue" onclick="previewAd()">معاينة الإعلان</button>
-  <div class="preview-box" id="previewBox">هنا يظهر إعلانك</div>
+<button class="btn btn-primary" onclick="submitOrder()">حجز عبر واتساب</button>
 
-  <button class="btn btn-primary" onclick="submitOrder()">حجز عبر واتساب</button>
-  <button class="btn btn-blue" onclick="downloadDetails()">تحميل التفاصيل</button>
-</aside>
+<div class="preview" id="previewBox">إعلانك هنا</div>
+</div>
 
 <script>
-mapboxgl.accessToken = "PUT_YOUR_MAPBOX_TOKEN_HERE";
+mapboxgl.accessToken = "pk.eyJ1IjoibjktN3Z2IiwiYSI6ImNtbTJubnJjMDA4OGEycXNnaXN2M21lZ3QifQ.yZPWMAgrnQxnwZZdr8kwjA";
 
 const screens = [
   {name:"Screen-1", coords:[46.61106,24.77635]},
@@ -143,63 +130,34 @@ const map = new mapboxgl.Map({
   zoom:11
 });
 
-map.addControl(new mapboxgl.NavigationControl(),"bottom-right");
-
-const geocoder = new MapboxGeocoder({
-  accessToken:mapboxgl.accessToken,
-  mapboxgl:mapboxgl,
-  marker:false,
-  countries:"sa",
-  language:"ar",
-  placeholder:"ابحث عن منشأة..."
-});
-
-map.addControl(geocoder,"top-left");
+map.addControl(new mapboxgl.NavigationControl());
 
 let userMarker=null;
 let selectedScreen=null;
 
-screens.forEach(screen=>{
+screens.forEach(s=>{
   new mapboxgl.Marker({color:"#ff0000"})
-    .setLngLat(screen.coords)
-    .setPopup(new mapboxgl.Popup().setText(screen.name))
+    .setLngLat(s.coords)
+    .setPopup(new mapboxgl.Popup().setText(s.name))
     .addTo(map);
 });
 
-function calculateNearest(lng,lat){
-  let minDist=Infinity;
-  screens.forEach(screen=>{
-    const dist=turf.distance(
-      turf.point([lng,lat]),
-      turf.point(screen.coords)
-    );
-    if(dist<minDist){
-      minDist=dist;
-      selectedScreen=screen;
+function calculate(lng,lat){
+  let min=999;
+  screens.forEach(s=>{
+    const dist=turf.distance(turf.point([lng,lat]),turf.point(s.coords));
+    if(dist<min){
+      min=dist;
+      selectedScreen=s;
     }
   });
-  return minDist;
+  return min;
 }
 
-function pricing(dist){
-  if(dist<=2)return 4000;
-  if(dist<=5)return 3000;
+function pricing(d){
+  if(d<=2)return 4000;
+  if(d<=5)return 3000;
   return 2000;
-}
-
-function aiScore(dist){
-  return Math.max(50,100 - Math.round(dist*10));
-}
-
-function updateStats(lng,lat){
-  const dist=calculateNearest(lng,lat);
-  const price=pricing(dist);
-  const eta=Math.round((dist/50)*60);
-
-  document.getElementById("distanceStat").innerText="المسافة: "+dist.toFixed(2)+" كم";
-  document.getElementById("priceStat").innerText="السعر: "+price+" ريال";
-  document.getElementById("etaStat").innerText="وقت الوصول: "+eta+" دقيقة";
-  document.getElementById("aiStat").innerText="مؤشر الموقع: "+aiScore(dist)+"/100";
 }
 
 map.on("click",e=>{
@@ -208,29 +166,25 @@ map.on("click",e=>{
     .setLngLat(e.lngLat)
     .addTo(map);
 
-  updateStats(e.lngLat.lng,e.lngLat.lat);
-});
+  const d=calculate(e.lngLat.lng,e.lngLat.lat);
+  const p=pricing(d);
+  const eta=Math.round((d/50)*60);
 
-geocoder.on("result",ev=>{
-  const [lng,lat]=ev.result.center;
-  if(userMarker)userMarker.remove();
-  userMarker=new mapboxgl.Marker({color:"#007bff"})
-    .setLngLat([lng,lat])
-    .addTo(map);
+  document.getElementById("distance").innerText="المسافة: "+d.toFixed(2)+" كم";
+  document.getElementById("price").innerText="السعر: "+p+" ريال";
+  document.getElementById("eta").innerText="وقت الوصول: "+eta+" دقيقة";
 
-  map.flyTo({center:[lng,lat],zoom:15});
-  updateStats(lng,lat);
-});
-
-function previewAd(){
-  const name=document.getElementById("businessName").value||"اسم منشأتك";
+  const name=document.getElementById("business").value||"إعلانك هنا";
   document.getElementById("previewBox").innerText=name;
-}
+});
 
 function submitOrder(){
-  if(!selectedScreen){alert("حدد موقع أولاً");return;}
-  const name=document.getElementById("businessName").value;
-  const price=document.getElementById("priceStat").innerText;
+  if(!selectedScreen){
+    alert("حدد موقع أولاً");
+    return;
+  }
+  const name=document.getElementById("business").value;
+  const price=document.getElementById("price").innerText;
 
   const msg=encodeURIComponent(
     "طلب حجز إعلان\n"+
@@ -240,20 +194,6 @@ function submitOrder(){
   );
 
   window.open("https://wa.me/966583611252?text="+msg,"_blank");
-}
-
-function downloadDetails(){
-  const data={
-    business:document.getElementById("businessName").value,
-    screen:selectedScreen?selectedScreen.name:null,
-    price:document.getElementById("priceStat").innerText
-  };
-  const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement("a");
-  a.href=url;
-  a.download="wadheex-details.json";
-  a.click();
 }
 </script>
 
