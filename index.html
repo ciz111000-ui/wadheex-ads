@@ -9,164 +9,22 @@
 <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
 <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
 
-<!-- Mapbox Geocoder -->
+<!-- Geocoder -->
 <link href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.css" rel="stylesheet" />
 <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.min.js"></script>
 
 <!-- Turf -->
 <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
 
-<!-- Supabase -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<link rel="stylesheet" href="style.css" />
-</head>
-
-<body>
-
-<!-- الشريط العلوي -->
-<header class="topbar">
-  <div class="brand">
-    <div class="logo-icon">W</div>
-    <span class="logo-text">WAMMED <span class="x">X</span></span>
-  </div>
-
-  <div class="top-actions">
-    <button id="loginOpen" class="top-btn">تسجيل الدخول</button>
-    <button id="signupOpen" class="top-btn highlight">إنشاء حساب</button>
-  </div>
-</header>
-
-<!-- الخريطة -->
-<div id="map"></div>
-
-<!-- اللوحة الجانبية -->
-<aside id="sidebar" class="sidebar">
-
-  <!-- زر الإغلاق -->
-  <button id="closeSidebar" class="close-sidebar">×</button>
-
-  <!-- البحث -->
-  <section class="card">
-    <h3 class="card-title">بحث عن موقع</h3>
-    <div id="geocoder"></div>
-  </section>
-
-  <!-- تفاصيل الشاشة -->
-  <section class="card" id="screenDetails" style="display:none">
-    <h3 class="card-title">الشاشة المختارة</h3>
-    <div id="screenInfo"></div>
-  </section>
-
-  <!-- الحجز -->
-  <section class="card" id="bookingSection" style="display:none">
-    <h3 class="card-title">إتمام الحجز</h3>
-
-    <label>اسم المنشأة</label>
-    <input id="orgName" type="text" placeholder="مثال: مطعم الواحة">
-
-    <label>نوع المنشأة</label>
-    <select id="orgType">
-      <option value="">اختر النوع</option>
-      <option>مطعم</option>
-      <option>مقهى</option>
-      <option>متجر</option>
-      <option>شركة</option>
-      <option>مؤسسة</option>
-    </select>
-
-    <label>عدد الشاشات</label>
-    <input id="screenCount" type="number" min="1" value="1">
-
-    <label>تاريخ ووقت البداية</label>
-    <input id="startDate" type="datetime-local">
-
-    <label>مدة العرض بالدقائق</label>
-    <input id="durationMinutes" type="number" min="10" value="60">
-
-    <label>هل تحتاج تصميم إعلان؟</label>
-    <select id="needDesign">
-      <option value="no">لا</option>
-      <option value="yes">نعم (+800 ريال)</option>
-    </select>
-
-    <label>رقم التواصل</label>
-    <input id="phone" type="text" placeholder="05xxxxxxxx">
-
-    <div class="price-box" id="priceBox">السعر: 0 ريال</div>
-
-    <button id="bookBtn" class="primary-btn" disabled>إتمام الحجز</button>
-  </section>
-
-  <!-- النطاق -->
-  <section class="card">
-    <h3 class="card-title">النطاق</h3>
-    <button id="rangeBtn" class="secondary-btn">تحديد نطاق</button>
-    <button id="clearRange" class="secondary-btn danger">مسح النطاق</button>
-    <div id="rangeInfo" class="range-info">لم يتم تحديد نطاق بعد</div>
-  </section>
-
-  <!-- الخريطة الحرارية -->
-  <section class="card">
-    <h3 class="card-title">الخريطة الحرارية</h3>
-    <label class="toggle">
-      <input type="checkbox" id="toggleHeat">
-      <span>تفعيل الخريطة الحرارية</span>
-    </label>
-  </section>
-
-</aside>
-
-<!-- زر فتح اللوحة -->
-<button id="openSidebar" class="open-sidebar">القائمة</button>
-
-<!-- نافذة تسجيل الدخول -->
-<div id="loginModal" class="modal">
-  <div class="modal-content">
-    <h2>تسجيل الدخول</h2>
-
-    <label>البريد الإلكتروني</label>
-    <input id="loginEmail" type="email">
-
-    <label>كلمة المرور</label>
-    <input id="loginPassword" type="password">
-
-    <button id="loginBtn" class="primary-btn">دخول</button>
-    <button class="close-modal">إغلاق</button>
-  </div>
-</div>
-
-<!-- نافذة إنشاء حساب -->
-<div id="signupModal" class="modal">
-  <div class="modal-content">
-    <h2>إنشاء حساب</h2>
-
-    <label>البريد الإلكتروني</label>
-    <input id="signupEmail" type="email">
-
-    <label>كلمة المرور</label>
-    <input id="signupPassword" type="password">
-
-    <button id="signupBtn" class="primary-btn">إنشاء</button>
-    <button class="close-modal">إغلاق</button>
-  </div>
-</div>
-
-<script src="app.js"></script>
-</body>
-</html>
-/* إعدادات عامة */
-body {
+<style>
+html, body {
   margin: 0;
   padding: 0;
-  font-family: "Inter", "Cairo", sans-serif;
+  height: 100%;
   background: #0B1E33;
+  font-family: "Inter", "Cairo", sans-serif;
   color: #F2F6FA;
   overflow: hidden;
-}
-
-* {
-  box-sizing: border-box;
 }
 
 /* الشريط العلوي */
@@ -181,11 +39,10 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 22px;
+  padding: 0 20px;
   z-index: 1000;
 }
 
-/* الشعار */
 .brand {
   display: flex;
   align-items: center;
@@ -195,11 +52,11 @@ body {
 .logo-icon {
   width: 34px;
   height: 34px;
-  border-radius: 6px;
   background: #4DA3FF;
   color: #0B1E33;
   font-weight: 900;
   font-size: 22px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -214,26 +71,6 @@ body {
   color: #4DA3FF;
 }
 
-/* أزرار الشريط */
-.top-actions {
-  display: flex;
-  gap: 10px;
-}
-
-.top-btn {
-  background: #123A63;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  color: #F2F6FA;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-.top-btn.highlight {
-  background: #1E5A8A;
-}
-
 /* الخريطة */
 #map {
   position: absolute;
@@ -243,11 +80,25 @@ body {
   left: 0;
 }
 
+/* زر فتح اللوحة */
+.open-sidebar {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  background: #1E5A8A;
+  color: #F2F6FA;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  z-index: 900;
+}
+
 /* اللوحة الجانبية */
 .sidebar {
   position: fixed;
   top: 64px;
-  right: -400px;
+  right: -380px;
   width: 360px;
   height: calc(100% - 64px);
   background: #0F2744;
@@ -271,20 +122,6 @@ body {
   float: left;
 }
 
-/* زر فتح اللوحة */
-.open-sidebar {
-  position: fixed;
-  top: 80px;
-  right: 20px;
-  background: #1E5A8A;
-  color: #F2F6FA;
-  border: none;
-  padding: 10px 18px;
-  border-radius: 6px;
-  cursor: pointer;
-  z-index: 900;
-}
-
 /* البطاقات */
 .card {
   background: #123A63;
@@ -300,6 +137,10 @@ body {
 }
 
 /* الحقول */
+label {
+  font-size: 13px;
+}
+
 input, select {
   width: 100%;
   padding: 10px;
@@ -369,38 +210,243 @@ input, select {
   gap: 10px;
 }
 
-/* النوافذ (Modal) */
-.modal {
-  position: fixed;
-  top: 0;
-  right: 0;
-  left: 0;
-  bottom: 0;
-  background: rgba(0,0,0,0.55);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000;
-}
-
-.modal.show {
-  display: flex;
-}
-
-.modal-content {
-  background: #123A63;
-  padding: 20px;
-  border-radius: 10px;
-  width: 320px;
-}
-
-.close-modal {
-  margin-top: 10px;
+/* Geocoder */
+.mapboxgl-ctrl-geocoder {
   width: 100%;
-  padding: 10px;
-  background: #8A1E1E;
-  border: none;
-  border-radius: 6px;
-  color: #F2F6FA;
-  cursor: pointer;
 }
+</style>
+</head>
+
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="logo-icon">W</div>
+    <span class="logo-text">WAMMED <span class="x">X</span></span>
+  </div>
+</header>
+
+<div id="map"></div>
+
+<button id="openSidebar" class="open-sidebar">القائمة</button>
+
+<aside id="sidebar" class="sidebar">
+  <button id="closeSidebar" class="close-sidebar">×</button>
+
+  <!-- البحث -->
+  <section class="card">
+    <h3 class="card-title">بحث عن موقع</h3>
+    <div id="geocoder"></div>
+  </section>
+
+  <!-- تفاصيل الشاشة -->
+  <section class="card" id="screenDetails" style="display:none">
+    <h3 class="card-title">الشاشة المختارة</h3>
+    <div id="screenInfo"></div>
+  </section>
+
+  <!-- الحجز -->
+  <section class="card" id="bookingSection" style="display:none">
+    <h3 class="card-title">إتمام الحجز</h3>
+
+    <label>اسم المنشأة</label>
+    <input id="orgName" type="text" placeholder="مثال: place X ">
+
+    <label>نوع المنشأة</label>
+    <select id="orgType">
+      <option value="">اختر النوع</option>
+      <option>مطعم</option>
+      <option>مقهى</option>
+      <option>متجر</option>
+      <option>شركة</option>
+      <option>مؤسسة</option>
+    </select>
+
+    <label>عدد الشاشات</label>
+    <input id="screenCount" type="number" min="1" value="1">
+
+    <label>تاريخ ووقت البداية</label>
+    <input id="startDate" type="datetime-local">
+
+    <label>مدة العرض بالدقائق</label>
+    <input id="durationMinutes" type="number" min="10" value="60">
+
+    <label>هل تحتاج تصميم إعلان؟</label>
+    <select id="needDesign">
+      <option value="no">لا</option>
+      <option value="yes">نعم (+800 ريال)</option>
+    </select>
+
+    <label>رقم التواصل</label>
+    <input id="phone" type="text" placeholder="05xxxxxxxx">
+
+    <div class="price-box" id="priceBox">السعر: 0 ريال</div>
+
+    <button id="bookBtn" class="primary-btn" disabled>إتمام الحجز</button>
+  </section>
+
+  <!-- النطاق -->
+  <section class="card">
+    <h3 class="card-title">النطاق</h3>
+    <button id="rangeBtn" class="secondary-btn">تحديد نطاق</button>
+    <button id="clearRange" class="secondary-btn danger">مسح النطاق</button>
+    <div id="rangeInfo" class="range-info">لم يتم تحديد نطاق بعد</div>
+  </section>
+
+  <!-- الخريطة الحرارية -->
+  <section class="card">
+    <h3 class="card-title">الخريطة الحرارية</h3>
+    <label class="toggle">
+      <input type="checkbox" id="toggleHeat">
+      <span>تفعيل الخريطة الحرارية (تجريبي)</span>
+    </label>
+  </section>
+</aside>
+
+<script>
+// توكن Mapbox حقّك
+mapboxgl.accessToken = "pk.eyJ1IjoibjktN3Z2IiwiYSI6ImNtbTJubnJjMDA4OGEycXNnaXN2M21lZ3QifQ.yZPWMAgrnQxnwZZdr8kwjA";
+
+// إنشاء الخريطة
+const map = new mapboxgl.Map({
+  container: "map",
+  style: "mapbox://styles/mapbox/dark-v11",
+  center: [46.6753, 24.7136], // الرياض
+  zoom: 11
+});
+
+// عناصر الواجهة
+const sidebar = document.getElementById("sidebar");
+const openSidebar = document.getElementById("openSidebar");
+const closeSidebar = document.getElementById("closeSidebar");
+const screenDetails = document.getElementById("screenDetails");
+const screenInfo = document.getElementById("screenInfo");
+const bookingSection = document.getElementById("bookingSection");
+const bookBtn = document.getElementById("bookBtn");
+const priceBox = document.getElementById("priceBox");
+
+let selectedScreen = null;
+
+// فتح وإغلاق اللوحة
+openSidebar.onclick = () => sidebar.classList.add("open");
+closeSidebar.onclick = () => sidebar.classList.remove("open");
+
+// Geocoder
+const geocoder = new MapboxGeocoder({
+  accessToken: mapboxgl.accessToken,
+  mapboxgl: mapboxgl,
+  marker: false,
+  placeholder: "ابحث عن موقع..."
+});
+document.getElementById("geocoder").appendChild(geocoder.onAdd(map));
+
+let searchMarker = null;
+geocoder.on("result", (e) => {
+  const coords = e.result.center;
+  if (searchMarker) searchMarker.remove();
+  searchMarker = new mapboxgl.Marker({ color: "#4DA3FF" })
+    .setLngLat(coords)
+    .addTo(map);
+  map.flyTo({ center: coords, zoom: 14 });
+});
+
+// شاشات تجريبية
+const screens = [
+  { id: 1, name: "شاشة العليا", coords: [46.675, 24.72], price: 150 },
+  { id: 2, name: "شاشة النخيل", coords: [46.68, 24.75], price: 180 },
+  { id: 3, name: "شاشة الملز", coords: [46.72, 24.68], price: 130 }
+];
+
+// عرض الشاشات على الخريطة
+screens.forEach(screen => {
+  const marker = new mapboxgl.Marker({ color: "#1E5A8A" })
+    .setLngLat(screen.coords)
+    .addTo(map);
+
+  marker.getElement().onclick = () => selectScreen(screen);
+});
+
+// اختيار شاشة
+function selectScreen(screen) {
+  selectedScreen = screen;
+  sidebar.classList.add("open");
+  screenDetails.style.display = "block";
+  bookingSection.style.display = "block";
+
+  screenInfo.innerHTML = `
+    <div><strong>الاسم:</strong> ${screen.name}</div>
+    <div><strong>السعر الأساسي:</strong> ${screen.price} ريال</div>
+  `;
+
+  updatePrice();
+}
+
+// حساب السعر
+function updatePrice() {
+  if (!selectedScreen) return;
+  let price = selectedScreen.price;
+  const count = Number(document.getElementById("screenCount").value || 1);
+  const needDesign = document.getElementById("needDesign").value;
+
+  price *= count;
+  if (needDesign === "yes") price += 800;
+
+  priceBox.innerHTML = `السعر: ${price} ريال`;
+  bookBtn.disabled = false;
+}
+
+document.getElementById("screenCount").oninput = updatePrice;
+document.getElementById("needDesign").onchange = updatePrice;
+
+// إتمام الحجز (تجريبي)
+bookBtn.onclick = () => {
+  if (!selectedScreen) return;
+  alert("تم إرسال طلب الحجز بنجاح على شاشة: " + selectedScreen.name);
+};
+
+// النطاق
+document.getElementById("rangeBtn").onclick = () => {
+  alert("اضغط على الخريطة لتحديد مركز النطاق");
+  map.once("click", (e) => {
+    const center = [e.lngLat.lng, e.lngLat.lat];
+    const circle = turf.circle(center, 1.5, { steps: 64, units: "kilometers" });
+
+    if (map.getSource("rangeCircle")) {
+      map.getSource("rangeCircle").setData(circle);
+    } else {
+      map.addSource("rangeCircle", {
+        type: "geojson",
+        data: circle
+      });
+      map.addLayer({
+        id: "rangeCircle",
+        type: "fill",
+        source: "rangeCircle",
+        paint: {
+          "fill-color": "#4DA3FF",
+          "fill-opacity": 0.25
+        }
+      });
+    }
+
+    document.getElementById("rangeInfo").innerHTML = "تم تحديد نطاق 1.5 كم";
+  });
+};
+
+document.getElementById("clearRange").onclick = () => {
+  if (map.getLayer("rangeCircle")) map.removeLayer("rangeCircle");
+  if (map.getSource("rangeCircle")) map.removeSource("rangeCircle");
+  document.getElementById("rangeInfo").innerHTML = "لم يتم تحديد نطاق بعد";
+};
+
+// الخريطة الحرارية (تجريبي)
+document.getElementById("toggleHeat").onchange = function () {
+  if (this.checked) {
+    alert("تم تفعيل الخريطة الحرارية (تجريبي)");
+  } else {
+    alert("تم إيقاف الخريطة الحرارية");
+  }
+};
+</script>
+</body>
+</html>
