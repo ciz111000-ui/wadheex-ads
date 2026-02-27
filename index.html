@@ -340,15 +340,6 @@ new mapboxgl.Marker({ color: "#00d1ff" })
   )
   .addTo(map);
 
-// حط علامة الشاشة
-screenMarker = new mapboxgl.Marker({ color: "#00d4ff" })
-  .setLngLat(SCREEN_POINT)
-  .setPopup(
-    new mapboxgl.Popup({ offset: 15 })
-      .setText("📺 موقع الشاشة - Screen-1")
-  )
-  .addTo(map);
-
 setDebug("🟢 جاهز — اضغط على الخريطة");
 setBadge("جاهز", true); 
   }catch(err){
