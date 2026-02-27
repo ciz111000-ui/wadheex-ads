@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Wadheex X – Stable Pro</title>
+<title>Wadheex X – Riyadh Locked</title>
 
 <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet"/>
 <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
@@ -139,11 +139,20 @@ body{margin:0;background:var(--bg);color:#fff;font-family:system-ui}
 <script>
 mapboxgl.accessToken="pk.eyJ1IjoibjktN3Z2IiwiYSI6ImNtbTJubnJjMDA4OGEycXNnaXN2M21lZ3QifQ.yZPWMAgrnQxnwZZdr8kwjA";
 
+/* 🔒 حدود الرياض */
+const riyadhBounds = [
+  [46.35, 24.45], // جنوب غرب
+  [47.15, 25.15]  // شمال شرق
+];
+
 const map=new mapboxgl.Map({
   container:"map",
   style:"mapbox://styles/mapbox/dark-v11",
   center:[46.67,24.75],
-  zoom:11
+  zoom:11,
+  minZoom:9,
+  maxZoom:16,
+  maxBounds: riyadhBounds
 });
 
 map.addControl(new mapboxgl.NavigationControl());
@@ -157,98 +166,8 @@ const screens=[
 ];
 
 let selected=null;
-let circleIds=[];
 
 map.on("load",()=>{
-  screens.forEach((screen,i)=>{
+  screens.forEach((screen)=>{
     new mapboxgl.Marker({color:screen.color})
       .setLngLat(screen.coords).addTo(map);
-
-    const circle=turf.circle(screen.coords,MAX_KM,{steps:80,units:"kilometers"});
-    const id="circle-"+i;
-    circleIds.push(id);
-
-    map.addSource(id,{type:"geojson",data:circle});
-    map.addLayer({
-      id:id,type:"fill",source:id,
-      paint:{
-        "fill-color":screen.color,
-        "fill-opacity":0.15
-      }
-    });
-  });
-
-  const now=new Date();
-  now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
-  document.getElementById("startDateTime").min=
-    now.toISOString().slice(0,16);
-});
-
-map.on("click",(e)=>{
-  const point=[e.lngLat.lng,e.lngLat.lat];
-
-  let inside=[];
-  screens.forEach((screen,i)=>{
-    const d=turf.distance(
-      turf.point(point),
-      turf.point(screen.coords),
-      {units:"kilometers"}
-    );
-    if(d<=MAX_KM){
-      inside.push({screen,index:i,distance:d});
-    }
-  });
-
-  const status=document.getElementById("status");
-  const btn=document.getElementById("bookBtn");
-
-  if(inside.length===0){
-    status.innerText="❌ خارج نطاق 10 دقائق";
-    btn.disabled=true; selected=null; return;
-  }
-
-  inside.sort((a,b)=>a.distance-b.distance);
-  selected=inside[0];
-
-  updatePrice();
-  status.innerText="✅ داخل نطاق 10 دقائق";
-  btn.disabled=false;
-});
-
-function updatePrice(){
-  let basePrice=
-    selected.distance<=2?4000:
-    selected.distance<=5?3000:2000;
-
-  let count=document.getElementById("screensCount").value;
-  let design=document.getElementById("needDesign").value;
-
-  let multiplier=count==="all"?3:parseInt(count);
-  let designFee=design==="yes"?800:0;
-
-  let total=(basePrice*multiplier)+designFee;
-
-  document.getElementById("price").innerText="السعر: "+total+" ريال";
-}
-
-document.getElementById("screensCount").addEventListener("change",updatePrice);
-document.getElementById("needDesign").addEventListener("change",updatePrice);
-
-function togglePanel(){
-  document.getElementById("panel").classList.toggle("collapsed");
-}
-
-function confirmBooking(){
-  const phone=document.getElementById("phone").value;
-
-  if(!/^05\d{8}$/.test(phone)){
-    alert("أدخل رقم سعودي صحيح يبدأ بـ 05");
-    return;
-  }
-
-  alert("تم استلام طلبك بنجاح ✅");
-}
-</script>
-
-</body>
-</html>
