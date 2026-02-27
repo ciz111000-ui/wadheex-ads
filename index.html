@@ -16,251 +16,40 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-body,html{
-  margin:0;
-  padding:0;
-  font-family:"Tajawal",sans-serif;
-  background:#050509;
-  overflow:hidden;
-}
-
-/* الخريطة */
-#map{
-  position:absolute;
-  top:0;left:0;
-  width:100%;
-  height:100%;
-}
-
-/* اللوحة الجانبية */
-.panel{
-  position:fixed;
-  right:0;
-  top:0;
-  width:380px;
-  height:100%;
-  background:rgba(10,10,15,0.96);
-  backdrop-filter:blur(18px);
-  border-left:1px solid rgba(255,255,255,0.08);
-  padding:18px 20px;
-  box-sizing:border-box;
-  transform:translateX(100%);
-  transition:0.4s ease;
-  z-index:999;
-  color:#f5f5f5;
-  display:flex;
-  flex-direction:column;
-}
-.panel.open{
-  transform:translateX(0);
-}
-
-.panel-toggle{
-  position:fixed;
-  right:20px;
-  top:20px;
-  width:46px;
-  height:46px;
-  background:rgba(15,15,25,0.9);
-  border:1px solid rgba(255,255,255,0.12);
-  border-radius:14px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
-  z-index:1000;
-  transition:0.25s;
-  color:#fff;
-  font-size:22px;
-}
-.panel-toggle:hover{
-  background:rgba(40,40,60,0.95);
-  transform:translateY(-1px);
-}
-
-/* موبايل */
-@media(max-width:768px){
-  .panel{
-    width:100%;
-    height:60%;
-    bottom:0;
-    top:auto;
-    right:0;
-    transform:translateY(100%);
-    border-left:none;
-    border-top:1px solid rgba(255,255,255,0.12);
-  }
-  .panel.open{
-    transform:translateY(0);
-  }
-  .panel-toggle{
-    right:50%;
-    transform:translateX(50%);
-    top:auto;
-    bottom:20px;
-  }
-}
-
-/* رأس اللوحة */
-.panel-header{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  margin-bottom:10px;
-}
-.panel-title{
-  font-size:20px;
-  font-weight:700;
-}
-.panel-subtitle{
-  font-size:12px;
-  color:#aaa;
-}
-
-/* أقسام */
-.section{
-  background:rgba(255,255,255,0.02);
-  border:1px solid rgba(255,255,255,0.06);
-  border-radius:14px;
-  padding:12px 12px 10px;
-  margin-bottom:10px;
-}
-.section-title{
-  font-size:14px;
-  font-weight:600;
-  margin-bottom:6px;
-  color:#e0e0e0;
-}
-
-/* الحالة */
-.status{
-  padding:10px;
-  border-radius:10px;
-  margin-bottom:8px;
-  text-align:center;
-  font-weight:600;
-  color:#fff;
-  font-size:13px;
-}
-.status.ok{
-  background:linear-gradient(135deg,#1b5e20,#2e7d32);
-}
-.status.no{
-  background:linear-gradient(135deg,#7f0000,#b71c1c);
-}
-
-/* حقول الإدخال */
-.label{
-  color:#cfcfcf;
-  margin:6px 0 3px;
-  font-size:13px;
-}
-input,select{
-  width:100%;
-  padding:9px 10px;
-  border-radius:9px;
-  border:1px solid rgba(255,255,255,0.12);
-  margin-bottom:6px;
-  background:rgba(10,10,18,0.9);
-  color:#fff;
-  font-size:13px;
-  box-sizing:border-box;
-}
-input::placeholder{
-  color:#777;
-}
-input:focus,select:focus{
-  outline:none;
-  border-color:#4caf50;
-  background:rgba(15,15,25,0.95);
-}
-
-/* أزرار */
-button{
-  width:100%;
-  padding:11px;
-  border:none;
-  border-radius:10px;
-  background:linear-gradient(135deg,#4caf50,#66bb6a);
-  color:#fff;
-  font-size:15px;
-  cursor:pointer;
-  margin-top:6px;
-  transition:0.25s;
-  font-weight:600;
-}
-button:hover:not(:disabled){
-  filter:brightness(1.05);
-  transform:translateY(-1px);
-}
-button:disabled{
-  background:#444;
-  cursor:not-allowed;
-  transform:none;
-}
-
-/* زر ثانوي */
-.btn-secondary{
-  background:linear-gradient(135deg,#3949ab,#5c6bc0);
-}
-
-/* السعر والعد التنازلي */
-.price-box{
-  background:rgba(0,0,0,0.55);
-  padding:10px;
-  border-radius:10px;
-  color:#fff;
-  font-size:15px;
-  text-align:center;
-  margin-top:4px;
-  border:1px solid rgba(255,255,255,0.12);
-}
-.countdown-box{
-  margin-top:6px;
-  padding:8px;
-  border-radius:10px;
-  font-size:13px;
-  text-align:center;
-  background:rgba(255,255,255,0.03);
-  border:1px dashed rgba(255,255,255,0.15);
-  color:#ddd;
-}
-
-/* معلومات المستخدم */
-.user-info{
-  font-size:12px;
-  color:#bdbdbd;
-  margin-top:4px;
-}
-
-/* Marker */
-.marker{
-  width:20px;
-  height:20px;
-  border-radius:50%;
-  box-shadow:0 0 10px 4px rgba(255,255,255,0.6);
-  cursor:pointer;
-}
-
-/* Popup */
-.mapboxgl-popup{
-  max-width:250px;
-  font-family:"Tajawal",sans-serif;
-}
-.mapboxgl-popup-content{
-  background:#111;
-  color:#fff;
-  border-radius:10px;
-  padding:15px;
-  border:1px solid #333;
-}
+body,html{margin:0;padding:0;font-family:"Tajawal",sans-serif;background:#050509;overflow:hidden}
+#map{position:absolute;top:0;left:0;width:100%;height:100%}
+.panel{position:fixed;right:0;top:0;width:380px;height:100%;background:rgba(10,10,15,0.96);backdrop-filter:blur(18px);border-left:1px solid rgba(255,255,255,0.08);padding:18px 20px;box-sizing:border-box;transform:translateX(100%);transition:0.4s ease;z-index:999;color:#f5f5f5;display:flex;flex-direction:column}
+.panel.open{transform:translateX(0)}
+.panel-toggle{position:fixed;right:20px;top:20px;width:46px;height:46px;background:rgba(15,15,25,0.9);border:1px solid rgba(255,255,255,0.12);border-radius:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:1000;transition:0.25s;color:#fff;font-size:22px}
+.panel-toggle:hover{background:rgba(40,40,60,0.95);transform:translateY(-1px)}
+@media(max-width:768px){.panel{width:100%;height:60%;bottom:0;top:auto;right:0;transform:translateY(100%);border-left:none;border-top:1px solid rgba(255,255,255,0.12)}.panel.open{transform:translateY(0)}.panel-toggle{right:50%;transform:translateX(50%);top:auto;bottom:20px}}
+.panel-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.panel-title{font-size:20px;font-weight:700}
+.panel-subtitle{font-size:12px;color:#aaa}
+.section{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:12px 12px 10px;margin-bottom:10px}
+.section-title{font-size:14px;font-weight:600;margin-bottom:6px;color:#e0e0e0}
+.status{padding:10px;border-radius:10px;margin-bottom:8px;text-align:center;font-weight:600;color:#fff;font-size:13px}
+.status.ok{background:linear-gradient(135deg,#1b5e20,#2e7d32)}
+.status.no{background:linear-gradient(135deg,#7f0000,#b71c1c)}
+.label{color:#cfcfcf;margin:6px 0 3px;font-size:13px}
+input,select{width:100%;padding:9px 10px;border-radius:9px;border:1px solid rgba(255,255,255,0.12);margin-bottom:6px;background:rgba(10,10,18,0.9);color:#fff;font-size:13px;box-sizing:border-box}
+input::placeholder{color:#777}
+input:focus,select:focus{outline:none;border-color:#4caf50;background:rgba(15,15,25,0.95)}
+button{width:100%;padding:11px;border:none;border-radius:10px;background:linear-gradient(135deg,#4caf50,#66bb6a);color:#fff;font-size:15px;cursor:pointer;margin-top:6px;transition:0.25s;font-weight:600}
+button:hover:not(:disabled){filter:brightness(1.05);transform:translateY(-1px)}
+button:disabled{background:#444;cursor:not-allowed;transform:none}
+.btn-secondary{background:linear-gradient(135deg,#3949ab,#5c6bc0)}
+.price-box{background:rgba(0,0,0,0.55);padding:10px;border-radius:10px;color:#fff;font-size:15px;text-align:center;margin-top:4px;border:1px solid rgba(255,255,255,0.12)}
+.countdown-box{margin-top:6px;padding:8px;border-radius:10px;font-size:13px;text-align:center;background:rgba(255,255,255,0.03);border:1px dashed rgba(255,255,255,0.15);color:#ddd}
+.user-info{font-size:12px;color:#bdbdbd;margin-top:4px}
+.marker{width:20px;height:20px;border-radius:50%;box-shadow:0 0 10px 4px rgba(255,255,255,0.6);cursor:pointer}
+.mapboxgl-popup{max-width:250px;font-family:"Tajawal",sans-serif}
+.mapboxgl-popup-content{background:#111;color:#fff;border-radius:10px;padding:15px;border:1px solid #333}
 </style>
 </head>
-
 <body>
 
 <div id="map"></div>
-
 <div class="panel-toggle">☰</div>
 
 <div class="panel" id="panel">
@@ -271,37 +60,28 @@ button:disabled{
     </div>
   </div>
 
-  <!-- قسم الحساب -->
   <div class="section" id="authSection">
     <div class="section-title">الحساب</div>
-
     <div id="authForms">
       <div class="label">البريد الإلكتروني</div>
       <input id="authEmail" type="email" placeholder="example@mail.com">
-
       <div class="label">كلمة المرور</div>
       <input id="authPassword" type="password" placeholder="********">
-
       <button id="loginBtn" class="btn-secondary">تسجيل الدخول</button>
       <button id="signupBtn" class="btn-secondary" style="margin-top:6px;background:#00897b;">إنشاء حساب جديد</button>
     </div>
-
     <div id="userPanel" style="display:none;">
       <div class="user-info" id="userInfo"></div>
       <button id="logoutBtn" style="background:#c62828;margin-top:10px;">تسجيل الخروج</button>
     </div>
   </div>
 
-  <!-- حالة الموقع والشاشة -->
   <div id="statusBox" class="status no">لم يتم اختيار موقع</div>
 
-  <!-- بيانات المنشأة -->
   <div class="section">
     <div class="section-title">بيانات المنشأة</div>
-
     <div class="label">اسم المنشأة</div>
     <input id="orgName" type="text" placeholder="مثال: مطعم الواحة">
-
     <div class="label">نوع المنشأة</div>
     <select id="orgType">
       <option value="">اختر النوع</option>
@@ -313,36 +93,29 @@ button:disabled{
     </select>
   </div>
 
-  <!-- تفاصيل الحجز -->
   <div class="section">
     <div class="section-title">تفاصيل الحجز</div>
-
     <div class="label">عدد الشاشات</div>
     <input id="screenCount" type="number" min="1" value="1">
-
     <div class="label">تاريخ ووقت البداية</div>
     <input id="startDate" type="datetime-local">
-
     <div class="label">هل تحتاج تصميم إعلان؟</div>
     <select id="needDesign">
       <option value="no">لا</option>
       <option value="yes">نعم (+800 ريال)</option>
     </select>
-
     <div class="label">رقم التواصل</div>
     <input id="phone" type="text" placeholder="05xxxxxxxx">
-
     <div class="price-box" id="priceBox">السعر: 0 ريال</div>
     <div class="countdown-box" id="countdownBox">العد التنازلي سيظهر بعد تأكيد الحجز</div>
-
     <button id="bookBtn" disabled>إتمام الحجز</button>
   </div>
 </div>
 
 <script>
-/* إعداد Supabase */
+/* Supabase config (مفتاح المشروع اللي أعطيتَه مدموج هنا) */
 const supabaseUrl = "https://wtoefcpjbudkuqjmymjp.supabase.co";
-const supabaseKey = "sb_publishable_1k821wV6u5JuD4MSGZrgnw_RVUNTorK";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0b2VmY3BqYnVka3Vxam15bWpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMDY4NTksImV4cCI6MjA4Nzc4Mjg1OX0.SZpo2lShgfOdZqNwE74pZUjNovrjO26JE31bRs1xuvg";
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
 /* تسجيل محلي احتياطي */
@@ -352,7 +125,7 @@ let localUser = null;
 async function refreshUser(){
   try{
     const { data, error } = await supabaseClient.auth.getUser();
-    const user = error ? null : data.user;
+    const user = (error || !data) ? null : data.user;
 
     if(user){
       document.getElementById("authForms").style.display="none";
@@ -382,18 +155,10 @@ async function refreshUser(){
 document.getElementById("signupBtn").onclick = async ()=>{
   const email = document.getElementById("authEmail").value.trim();
   const pass = document.getElementById("authPassword").value.trim();
-
-  if(!email || !pass){
-    alert("الرجاء إدخال البريد وكلمة المرور");
-    return;
-  }
-
+  if(!email || !pass){ alert("الرجاء إدخال البريد وكلمة المرور"); return; }
   try{
     const { error } = await supabaseClient.auth.signUp({ email, password:pass });
-    if(error){
-      alert("خطأ في إنشاء الحساب: "+error.message);
-      return;
-    }
+    if(error){ alert("خطأ في إنشاء الحساب: "+error.message); return; }
     alert("تم إنشاء الحساب بنجاح، تحقق من بريدك الإلكتروني.");
   }catch(e){
     alert("تعذر الاتصال بالخادم، سيتم استخدام تسجيل محلي.");
@@ -406,18 +171,10 @@ document.getElementById("signupBtn").onclick = async ()=>{
 document.getElementById("loginBtn").onclick = async ()=>{
   const email = document.getElementById("authEmail").value.trim();
   const pass = document.getElementById("authPassword").value.trim();
-
-  if(!email || !pass){
-    alert("الرجاء إدخال البريد وكلمة المرور");
-    return;
-  }
-
+  if(!email || !pass){ alert("الرجاء إدخال البريد وكلمة المرور"); return; }
   try{
     const { error } = await supabaseClient.auth.signInWithPassword({ email, password:pass });
-    if(error){
-      alert("خطأ في تسجيل الدخول: "+error.message);
-      return;
-    }
+    if(error){ alert("خطأ في تسجيل الدخول: "+error.message); return; }
     alert("تم تسجيل الدخول بنجاح");
     refreshUser();
   }catch(e){
@@ -429,26 +186,14 @@ document.getElementById("loginBtn").onclick = async ()=>{
 
 /* تسجيل الخروج */
 document.getElementById("logoutBtn").onclick = async ()=>{
-  try{
-    await supabaseClient.auth.signOut();
-  }catch(e){}
+  try{ await supabaseClient.auth.signOut(); }catch(e){}
   localUser = null;
   refreshUser();
 };
 
 /* إعداد الخريطة */
 mapboxgl.accessToken = "pk.eyJ1IjoibjktN3Z2IiwiYSI6ImNtbTJubnJjMDA4OGEycXNnaXN2M21lZ3QifQ.yZPWMAgrnQxnwZZdr8kwjA";
-
-const map = new mapboxgl.Map({
-  container:"map",
-  style:"mapbox://styles/mapbox/dark-v11",
-  center:[46.67,24.75],
-  zoom:11,
-  minZoom:9,
-  maxZoom:16,
-  maxBounds:[[46.3,24.4],[47.1,25.1]]
-});
-
+const map = new mapboxgl.Map({ container:"map", style:"mapbox://styles/mapbox/dark-v11", center:[46.67,24.75], zoom:11, minZoom:9, maxZoom:16, maxBounds:[[46.3,24.4],[47.1,25.1]] });
 map.addControl(new mapboxgl.NavigationControl());
 
 /* الشاشات */
@@ -461,84 +206,135 @@ const screens = [
 let circles = {};
 let selectedScreen = null;
 
-/* رسم الشاشات والدوائر */
+/* رسم الشاشات والدوائر (نصف قطر 7.5 كم ≈ 10 دقائق بالسيارة) */
 screens.forEach((s,i)=>{
   const el = document.createElement("div");
   el.className="marker";
   el.style.background=s.color;
   el.style.boxShadow=`0 0 12px 4px ${s.color}`;
-
   el.addEventListener("click",()=>{ selectScreen(s); });
-
-  new mapboxgl.Marker(el)
-    .setLngLat(s.coords)
-    .setPopup(new mapboxgl.Popup().setHTML(`<h3>${s.name}</h3><p>شاشة إعلانية ذكية</p>`))
-    .addTo(map);
-
+  new mapboxgl.Marker(el).setLngLat(s.coords).setPopup(new mapboxgl.Popup().setHTML(`<h3>${s.name}</h3><p>شاشة إعلانية ذكية</p>`)).addTo(map);
   const circle = turf.circle(s.coords,7.5,{steps:80,units:"kilometers"});
   circles[s.name]=circle;
 });
 
 map.on("load",()=>{
   Object.keys(circles).forEach((key,i)=>{
-    map.addSource("circle-"+i,{
-      type:"geojson",
-      data:circles[key]
-    });
-    map.addLayer({
-      id:"circle-"+i,
-      type:"fill",
-      source:"circle-"+i,
-      paint:{
-        "fill-color":"#ffffff",
-        "fill-opacity":0.15
-      }
-    });
+    map.addSource("circle-"+i,{ type:"geojson", data:circles[key] });
+    map.addLayer({ id:"circle-"+i, type:"fill", source:"circle-"+i, paint:{ "fill-color":"#ffffff", "fill-opacity":0.15 } });
   });
 });
 
 /* عند الضغط على الخريطة */
 map.on("click",(e)=>{
   const pt = [e.lngLat.lng,e.lngLat.lat];
-
   let nearest = null;
   let minDist = Infinity;
-
   screens.forEach(s=>{
     const d = turf.distance(pt,s.coords,{units:"kilometers"});
-    if(d < minDist){
-      minDist = d;
-      nearest = s;
-    }
+    if(d < minDist){ minDist = d; nearest = s; }
   });
-
-  if(minDist <= 7.5){
-    selectScreen(nearest,minDist);
-  }else{
-    selectedScreen = null;
-    updateStatus(false);
-    resetCircles();
-    document.getElementById("bookBtn").disabled=true;
-  }
+  if(minDist <= 7.5){ selectScreen(nearest,minDist); }else{ selectedScreen = null; updateStatus(false); resetCircles(); document.getElementById("bookBtn").disabled=true; }
 });
 
 /* اختيار شاشة */
 function selectScreen(screen,dist=null){
   selectedScreen = screen;
   highlightCircle(screen.name);
-
   const distance = dist ? dist.toFixed(2) : turf.distance(map.getCenter(),screen.coords,{units:"kilometers"}).toFixed(2);
   const time = Math.round(distance / 7.5 * 10);
-
   updateStatus(true,screen.name,distance,time);
   document.getElementById("bookBtn").disabled=false;
-
   updatePrice();
 }
 
 /* تحديث الحالة */
 function updateStatus(ok,name="",dist="",time=""){
   const box = document.getElementById("statusBox");
-  if(ok){
-    box.className="status ok";
-    box.innerHTML=`${name}<br>المسافة: ${dist} كم<br>الوقت التقريبي بالسيارة: ${time
+  if(ok){ box.className="status ok"; box.innerHTML=`${name}<br>المسافة: ${dist} كم<br>الوقت التقريبي بالسيارة: ${time} دقيقة`; }
+  else{ box.className="status no"; box.innerHTML="خارج نطاق الشاشات (حوالي 10 دقائق بالسيارة)"; }
+}
+
+/* تمييز الدائرة */
+function highlightCircle(name){
+  resetCircles();
+  Object.keys(circles).forEach((key,i)=>{ if(key===name){ map.setPaintProperty("circle-"+i,"fill-opacity",0.35); } });
+}
+function resetCircles(){ Object.keys(circles).forEach((key,i)=>{ map.setPaintProperty("circle-"+i,"fill-opacity",0.15); }); }
+
+/* التحقق من رقم الجوال */
+document.getElementById("phone").addEventListener("input",()=>{
+  const v = document.getElementById("phone").value;
+  if(/^05\d{8}$/.test(v)){ document.getElementById("phone").style.border="1px solid #4caf50"; }else{ document.getElementById("phone").style.border="1px solid #b71c1c"; }
+});
+
+/* منع التاريخ الماضي */
+document.getElementById("startDate").setAttribute("min",new Date().toISOString().slice(0,16));
+
+/* حساب السعر */
+function updatePrice(){
+  if(!selectedScreen) return;
+  const count = parseInt(document.getElementById("screenCount").value||1);
+  const needDesign = document.getElementById("needDesign").value==="yes";
+  const dist = turf.distance(map.getCenter(),selectedScreen.coords,{units:"kilometers"});
+  let base = 2000;
+  if(dist <=2) base=4000;
+  else if(dist <=5) base=3000;
+  let total = base * count;
+  if(needDesign) total += 800;
+  document.getElementById("priceBox").innerHTML=`السعر: ${total} ريال`;
+}
+document.querySelectorAll("#screenCount,#needDesign").forEach(el=>{ el.addEventListener("input",updatePrice); });
+
+/* فتح/إغلاق اللوحة */
+document.querySelector(".panel-toggle").onclick=()=>{ document.getElementById("panel").classList.toggle("open"); };
+
+/* عداد تنازلي */
+let countdownInterval = null;
+function startCountdown(startDateStr){
+  const countdownBox = document.getElementById("countdownBox");
+  if(countdownInterval) clearInterval(countdownInterval);
+  const target = new Date(startDateStr);
+  const now = new Date();
+  if(target <= now){ countdownBox.textContent = "وقت بداية الإعلان الآن أو في الماضي."; return; }
+  countdownInterval = setInterval(()=>{
+    const now = new Date();
+    let diff = target - now;
+    if(diff <= 0){ clearInterval(countdownInterval); countdownBox.textContent = "بدأ وقت عرض الإعلان."; return; }
+    const seconds = Math.floor(diff/1000);
+    const h = Math.floor(seconds/3600);
+    const m = Math.floor((seconds%3600)/60);
+    const s = seconds%60;
+    countdownBox.textContent = `العد التنازلي: ${h} ساعة ${m} دقيقة ${s} ثانية`;
+  },1000);
+}
+
+/* نظام الحجز */
+document.getElementById("bookBtn").addEventListener("click",async ()=>{
+  let userEmail = null;
+  try{ const { data } = await supabaseClient.auth.getUser(); if(data && data.user) userEmail = data.user.email; }catch(e){}
+  if(!userEmail && localUser) userEmail = localUser.email;
+  if(!userEmail){ alert("الرجاء تسجيل الدخول أولاً قبل إتمام الحجز."); return; }
+  if(!selectedScreen){ alert("الرجاء اختيار شاشة من الخريطة."); return; }
+  const orgName = document.getElementById("orgName").value.trim();
+  const orgType = document.getElementById("orgType").value;
+  const screenCount = parseInt(document.getElementById("screenCount").value||1);
+  const startDate = document.getElementById("startDate").value;
+  const needDesign = document.getElementById("needDesign").value==="yes";
+  const phone = document.getElementById("phone").value.trim();
+  if(!orgName || !orgType){ alert("الرجاء إدخال اسم المنشأة ونوعها."); return; }
+  if(!startDate){ alert("الرجاء اختيار تاريخ ووقت البداية."); return; }
+  if(!/^05\d{8}$/.test(phone)){ alert("رقم الجوال غير صحيح. يجب أن يكون بصيغة 05xxxxxxxx"); return; }
+  const priceText = document.getElementById("priceBox").textContent;
+  const bookingData = { user: userEmail, orgName, orgType, screenName: selectedScreen.name, screenCount, startDate, needDesign, phone, priceText };
+  console.log("Booking Data:", bookingData);
+  alert("تم استلام طلب الحجز بنجاح.\nسيتم التواصل معك لتأكيد التفاصيل.");
+  startCountdown(startDate);
+});
+
+/* تهيئة واجهة الحساب */
+refreshUser();
+</script>
+
+</body>
+</html>
