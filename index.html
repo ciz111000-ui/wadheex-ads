@@ -1,508 +1,261 @@
-<!doctype html>
-<html lang="ar" dir="rtl">
+<!DOCTYPE html>
+<html lang="ar">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Wadheex Ads — منصة وميض</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Wadheex X | منصة الحجز الذاتي</title>
 
-  <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
-  <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+<link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
 
-  /* حركة إخفاء اللوحة */
-#sidePanel {
-  transition: transform 0.35s ease;
+<link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.1/mapbox-gl-geocoder.css" />
+<script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.1/mapbox-gl-geocoder.min.js"></script>
+
+<style>
+:root{
+  --primary:#ff3b3b;
+  --blue:#007bff;
+  --bg:#0f1724;
+  --card:#121b2e;
 }
 
-#sidePanel.is-hidden {
-  transform: translateX(110%);
-}<style>
-    :root{
-      --bg:#0b0f17;
-      --panel:#0f1624;
-      --panel2:#0b1220;
-      --text:#e9eefb;
-      --muted:#aab6d6;
-      --stroke:rgba(255,255,255,.08);
-      --orange:#ff6600;
-      --orange2:#ff3300;
-      --ok:#22c55e;
-      --bad:#ef4444;
-    }
-    html, body { height:100%; margin:0; background:var(--bg); font-family: system-ui, -apple-system, Segoe UI, Tahoma, Arial; color:var(--text); }
-    #app { position:relative; width:100%; height:100%; overflow:hidden; }
-    #map { position:absolute; inset:0; }
+html,body{
+  margin:0;
+  height:100%;
+  font-family:system-ui;
+  background:var(--bg);
+  color:#fff;
+}
 
-    /* شريط أعلى */
-    .topbar{
-      position:absolute; top:14px; right:14px; left:14px;
-      display:flex; justify-content:space-between; gap:12px;
-      z-index:10; pointer-events:none;
-    }
-    .pill{
-      pointer-events:auto;
-      background:rgba(15,22,36,.85);
-      border:1px solid var(--stroke);
-      backdrop-filter: blur(10px);
-      border-radius:14px;
-      padding:10px 12px;
-      font-size:13px;
-      color:var(--muted);
-      max-width:520px;
-      line-height:1.4;
-      box-shadow: 0 12px 30px rgba(0,0,0,.35);
-    }
-    .pill b{ color:var(--text); }
+#map{
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  bottom:0;
+}
 
-    /* لوحة يمين */
-    .panel{
-      position:absolute; top:70px; right:14px; bottom:14px;
-      width:360px; max-width: calc(100% - 28px);
-      background:rgba(15,22,36,.88);
-      border:1px solid var(--stroke);
-      backdrop-filter: blur(12px);
-      border-radius:18px;
-      z-index:10;
-      box-shadow: 0 18px 45px rgba(0,0,0,.45);
-      display:flex; flex-direction:column;
-      overflow:hidden;
-    }
-    .panel header{
-      padding:14px 14px 10px;
-      border-bottom:1px solid var(--stroke);
-      background:linear-gradient(180deg, rgba(255,102,0,.10), transparent);
-    }
-    .panel header .title{
-      font-weight:800; letter-spacing:.2px;
-      display:flex; align-items:center; justify-content:space-between;
-      gap:10px;
-    }
-    .badge{
-      font-size:12px;
-      padding:6px 10px;
-      border-radius:999px;
-      border:1px solid var(--stroke);
-      background:rgba(255,255,255,.03);
-      color:var(--muted);
-    }
-    .badge.ok{ color:var(--ok); border-color:rgba(34,197,94,.25); background:rgba(34,197,94,.08); }
-    .badge.bad{ color:var(--bad); border-color:rgba(239,68,68,.25); background:rgba(239,68,68,.08); }
+.panel{
+  position:absolute;
+  top:0;
+  right:0;
+  width:380px;
+  max-width:100%;
+  height:100%;
+  background:var(--card);
+  padding:20px;
+  overflow:auto;
+  z-index:10;
+  box-shadow:-10px 0 30px rgba(0,0,0,.4);
+}
 
-    .panel .content{
-      padding:12px 14px;
-      display:flex; flex-direction:column; gap:10px;
-      overflow:auto;
-    }
+.panel h2{
+  margin-top:0;
+}
 
-    .grid{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:10px;
-    }
-    .card{
-      background:rgba(11,18,32,.65);
-      border:1px solid var(--stroke);
-      border-radius:14px;
-      padding:10px;
-    }
-    .label{ font-size:12px; color:var(--muted); margin-bottom:6px; }
-    .value{ font-size:14px; color:var(--text); min-height:18px; }
+.input{
+  width:100%;
+  padding:10px;
+  margin:6px 0;
+  border-radius:8px;
+  border:none;
+}
 
-    .row{ display:flex; gap:10px; }
-    .btn{
-      cursor:pointer;
-      border:1px solid var(--stroke);
-      background:rgba(255,255,255,.03);
-      color:var(--text);
-      padding:10px 12px;
-      border-radius:12px;
-      font-weight:700;
-      width:100%;
-    }
-    .btn:hover{ filter:brightness(1.08); }
-    .btn.orange{ background:var(--orange); border-color:rgba(255,102,0,.5); color:white; }
-    .btn.ghost{ background:rgba(255,255,255,.03); }
-    .btn.small{ padding:8px 10px; font-weight:700; }
+.btn{
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+  margin-top:10px;
+  font-weight:bold;
+}
 
-    .hint{
-      font-size:13px; color:var(--muted); line-height:1.5;
-      border:1px dashed rgba(255,255,255,.12);
-      border-radius:14px;
-      padding:10px 12px;
-      background:rgba(0,0,0,.15);
-    }
-    .hint b{ color:var(--text); }
+.btn-primary{background:var(--primary);color:#fff;}
+.btn-blue{background:var(--blue);color:#fff;}
 
-    /* إخفاء شعار mapbox controls خلف اللوحة */
-    .mapboxgl-ctrl-bottom-right{ right: 380px; }
+.stat{
+  background:#1c2740;
+  padding:10px;
+  margin-top:8px;
+  border-radius:8px;
+  font-size:14px;
+}
 
-    /* على الجوال */
-    @media (max-width: 900px){
-      .panel{ width:auto; left:14px; right:14px; height: 46%; top:auto; bottom:14px; }
-      .mapboxgl-ctrl-bottom-right{ right: 14px; }
-      .topbar{ flex-direction:column; align-items:flex-start; }
-    }
-  </style>
+.preview-box{
+  background:#000;
+  height:120px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin-top:10px;
+  border-radius:8px;
+  font-weight:bold;
+}
+
+@media(max-width:900px){
+  .panel{
+    width:100%;
+    height:50%;
+    bottom:0;
+    top:auto;
+    border-radius:20px 20px 0 0;
+  }
+}
+</style>
 </head>
-
 <body>
-<div id="app">
-  <div id="map"></div>
-<button id="panelToggle">☰</button>
-  <div class="topbar">
-    <div class="pill"><b>Wadheex Ads — منصة وميض</b><br>اضغط على الخريطة أو ابحث بالعنوان. النظام يقول لك إذا داخل نطاق أقرب شاشة خلال 10 دقائق أو خارج النطاق.</div>
-    <div class="pill" id="debugPill">🟡 جاري التحميل…</div>
-  </div>
 
-  <aside id="sidePanel" class="panel">
-    <header>
-      <div class="title">
-        <div>منصة الحجز الذاتي — Wadheex Ads</div>
-        <div class="badge" id="statusBadge">—</div>
-      </div>
-      <div style="margin-top:6px; font-size:12px; color:var(--muted)">اختيار موقع + تسعير + إرسال واتس</div>
-    </header>
+<div id="map"></div>
 
-    <div class="content">
-      <div class="grid">
-        <div class="card">
-          <div class="label">موقع المنشأة</div>
-          <div class="value" id="addr">—</div>
-        </div>
-        <div class="card">
-          <div class="label">الإحداثيات</div>
-          <div class="value" id="coords">—</div>
-        </div>
+<aside class="panel">
+  <h2>Wadheex X</h2>
 
-        <div class="card">
-          <div class="label">أقرب شاشة</div>
-          <div class="value" id="nearest">—</div>
-        </div>
-        <div class="card">
-          <div class="label">المسافة التقريبية</div>
-          <div class="value" id="dist">—</div>
-        </div>
+  <input id="businessName" class="input" placeholder="اسم المنشأة" />
+  <input id="phoneInput" class="input" placeholder="رقم التواصل" />
 
-        <div class="card">
-          <div class="label">تسعير مبدئي</div>
-          <div class="value" id="price">—</div>
-        </div>
-        <div class="card">
-          <div class="label">الحالة</div>
-          <div class="value" id="insideTxt">—</div>
-        </div>
-      </div>
+  <div class="stat" id="distanceStat">المسافة: -</div>
+  <div class="stat" id="priceStat">السعر: -</div>
+  <div class="stat" id="etaStat">وقت الوصول: -</div>
+  <div class="stat" id="aiStat">مؤشر الموقع: -</div>
 
-      <div class="hint">
-        <b>شرح سريع:</b><br>
-        إذا كنت <span style="color:var(--ok); font-weight:800">داخل النطاق</span> تقدر تقدم الطلب مباشرة.<br>
-        إذا كنت <span style="color:var(--bad); font-weight:800">خارج النطاق</span> يظهر لك أقرب شاشة لكن الطلب يتوقف لين توسع التغطية.
-      </div>
+  <button class="btn btn-blue" onclick="previewAd()">معاينة الإعلان</button>
+  <div class="preview-box" id="previewBox">هنا يظهر إعلانك</div>
 
-      <div class="row">
-        <button class="btn small" id="copyBtn">نسخ الإحداثيات</button>
-        <button class="btn small" id="saveBtn">حفظ هذا الطلب</button>
-      </div>
-
-      <button class="btn orange" id="waBtn">(WhatsApp) تقديم طلب</button>
-
-      <div class="row">
-        <button class="btn ghost" id="exportBtn">تصدير (JSON)</button>
-        <button class="btn ghost" id="clearBtn">مسح الطلبات</button>
-      </div>
-
-      <div class="card">
-        <div class="label">طلباتك المحفوظة (Local)</div>
-        <div class="value"><span id="count">0</span> طلب</div>
-      </div>
-    </div>
-  </aside>
-</div>
+  <button class="btn btn-primary" onclick="submitOrder()">حجز عبر واتساب</button>
+  <button class="btn btn-blue" onclick="downloadDetails()">تحميل التفاصيل</button>
+</aside>
 
 <script>
+mapboxgl.accessToken = "PUT_YOUR_MAPBOX_TOKEN_HERE";
 
-  // أكوادك الحالية فوق هنا
+const screens = [
+  {name:"Screen-1", coords:[46.61106,24.77635]},
+  {name:"Screen-2", coords:[46.65000,24.80000]},
+  {name:"Screen-3", coords:[46.70000,24.75000]}
+];
 
-  // 👇👇 هنا نحط كود زر الإخفاء
-
- const sidePanel = document.getElementById("sidePanel");
-const panelToggle = document.getElementById("panelToggle");
-
-if (panelToggle && sidePanel) {
-  panelToggle.addEventListener("click", () => {
-    sidePanel.classList.toggle("is-hidden");
-  });
-}
-</script>
-/* ==============================
-   0) إعداداتك (لا تغيّر إلا لو تبغى)
-================================ */
-mapboxgl.accessToken = "pk.eyJ1IjoibjktN3Z2IiwiYSI6ImNtbTJubnJjMDA4OGEycXNnaXN2M21lZ3QifQ.yZPWMAgrnQxnwZZdr8kwjA";
-
-// ملف النطاق (iso) — لازم يكون موجود جنب index.html
-const AREA_FILE = "iso-screen-1.geojson";
-
-// رقم الواتس (بدون +)
-const WHATSAPP_PHONE = "966583611252";
-
-// تسعير مبدئي (تقدر تعدله)
-const PRICE_INSIDE_WEEK = 2000;   // داخل النطاق
-const PRICE_OUTSIDE_TEXT = "خارج نطاق التغطية";
-
-/* ==============================
-   1) عناصر UI
-================================ */
-const elAddr = document.getElementById("addr");
-const elCoords = document.getElementById("coords");
-const elNearest = document.getElementById("nearest");
-const elDist = document.getElementById("dist");
-const elPrice = document.getElementById("price");
-const elInsideTxt = document.getElementById("insideTxt");
-const elBadge = document.getElementById("statusBadge");
-const elCount = document.getElementById("count");
-const elDebug = document.getElementById("debugPill");
-
-function setBadge(text, ok=null){
-  elBadge.textContent = text;
-  elBadge.classList.remove("ok","bad");
-  if(ok===true) elBadge.classList.add("ok");
-  if(ok===false) elBadge.classList.add("bad");
-}
-
-function setDebug(text){
-  elDebug.textContent = text;
-}
-
-/* ==============================
-   2) الخريطة
-================================ */
-  // ✅ إحداثيات الشاشة (حط هنا موقع الشاشة الحقيقي)
-const SCREEN1 = { name: "Screen-1", lng: 46.611060, lat: 24.776352 };
 const map = new mapboxgl.Map({
-  container: "map",
-  style: "mapbox://styles/mapbox/streets-v11",
-  center: [46.67, 24.74],
-  zoom: 11
-});
-map.addControl(new mapboxgl.NavigationControl(), "bottom-right");
-
-let marker = null;
-let areaFeature = null;   // Feature Polygon/MultiPolygon للفحص
-let areaFC = null;        // FeatureCollection للرسم
-let insideArea = false;
-let lastClick = null;
-
-/* ==============================
-   3) تطبيع GeoJSON (يتعامل مع ORS)
-      ORS أحياناً يحط Feature Point أولاً
-================================ */
-function isPolyType(t){ return t === "Polygon" || t === "MultiPolygon"; }
-
-async function loadArea(){
-  const res = await fetch(AREA_FILE, { cache: "no-store" });
-  if(!res.ok) throw new Error("ما قدرت أقرأ ملف النطاق. تأكد الاسم والمسار: " + AREA_FILE);
-
-  const geo = await res.json();
-  let feature = null;
-
-  if(geo.type === "FeatureCollection"){
-    feature = (geo.features || []).find(f => f && f.geometry && isPolyType(f.geometry.type));
-  } else if(geo.type === "Feature") {
-    if(geo.geometry && isPolyType(geo.geometry.type)) feature = geo;
-  } else {
-    throw new Error("صيغة الملف غير صحيحة. لازم FeatureCollection أو Feature.");
-  }
-
-  if(!feature) throw new Error("ملف النطاق ما فيه Polygon/MultiPolygon (ممكن فيه Point فقط).");
-
-  areaFeature = feature;
-  areaFC = { type:"FeatureCollection", features:[feature] };
-  return areaFC;
-}
-
-/* ==============================
-   4) رسم النطاق + تقريب تلقائي
-================================ */
-map.on("load", async ()=>{
-  try{
-    setDebug("🟡 تحميل النطاق…");
-
-    const fc = await loadArea();
-
-    map.addSource("screen-area", { type:"geojson", data: fc });
-
-    map.addLayer({
-      id:"screen-fill",
-      type:"fill",
-      source:"screen-area",
-      paint:{ "fill-color":"#ff6600", "fill-opacity":0.28 }
-    });
-
-    map.addLayer({
-      id:"screen-outline",
-      type:"line",
-      source:"screen-area",
-      paint:{ "line-color":"#ff3300", "line-width":2 }
-    });
-
-    // تقريب على حدود النطاق
- const bbox = turf.bbox(fc);
-map.fitBounds(bbox, { padding: 60, duration: 700 });  
-    
- // ✅ 1) حدّد إحداثيات مكان الشاشة الحقيقي (Lng, Lat)
-const SCREEN_POINT = [46.700351, 24.826890]; // غيّرها لإحداثيات شاشتك
-
-// ✅ Marker ثابت لموقع الشاشة
-new mapboxgl.Marker({ color: "#00d1ff" })
-  .setLngLat([SCREEN1.lng, SCREEN1.lat])
-  .setPopup(
-    new mapboxgl.Popup({ offset: 25 })
-      .setText(`موقع الشاشة: ${SCREEN1.name}`)
-  )
-  .addTo(map);
-
-setDebug("🟢 جاهز — اضغط على الخريطة");
-setBadge("جاهز", true); 
-  }catch(err){
-    console.error(err);
-    setDebug("🔴 خطأ: " + err.message);
-    setBadge("خطأ في التحميل", false);
-    alert("خطأ في تحميل النطاق:\n" + err.message + "\n\nافتح iso-screen-1.geojson وتأكد فيه Polygon/MultiPolygon.");
-  }
+  container:"map",
+  style:"mapbox://styles/mapbox/dark-v11",
+  center:[46.67,24.75],
+  zoom:11
 });
 
-/* ==============================
-   5) أدوات: حساب مسافة تقريبية + عنوان تقريبي (بدون API إضافي)
-================================ */
-function kmBetween(lng1, lat1, lng2, lat2){
-  const p1 = turf.point([lng1,lat1]);
-  const p2 = turf.point([lng2,lat2]);
-  return turf.distance(p1,p2,{units:"kilometers"});
-}
+map.addControl(new mapboxgl.NavigationControl(),"bottom-right");
 
-// (بسيطة) اسم "أقرب شاشة" — حالياً شاشة 1 (توسعها لاحقاً)
-function nearestScreenTo(lng, lat){
-  // مركز النطاق من المضلع
-  const center = turf.center(areaFC).geometry.coordinates; // [lng,lat]
-  const km = kmBetween(lng, lat, center[0], center[1]);
-  return { name:"Screen-1", km, center };
-}
-
-/* ==============================
-   6) كليك على الخريطة
-================================ */
-map.on("click", (e)=>{
-  if(!areaFeature){
-    alert("النطاق ما انحمّل للحين…");
-    return;
-  }
-
-  lastClick = { lng: e.lngLat.lng, lat: e.lngLat.lat };
-
-  if(marker) marker.remove();
-  marker = new mapboxgl.Marker().setLngLat(e.lngLat).addTo(map);
-
-  const pt = turf.point([lastClick.lng, lastClick.lat]);
-  insideArea = turf.booleanPointInPolygon(pt, areaFeature);
-
-  // أقرب شاشة + مسافة
-  const near = nearestScreenTo(lastClick.lng, lastClick.lat);
-
-  // تعبئة البيانات
-  elCoords.textContent = `${lastClick.lat.toFixed(6)}, ${lastClick.lng.toFixed(6)}`;
-  elNearest.textContent = near.name;
-  elDist.textContent = `${near.km.toFixed(2)} كم`;
-
-  if(insideArea){
-    elInsideTxt.innerHTML = `<span style="color:var(--ok); font-weight:800">داخل النطاق ✅</span>`;
-    elPrice.textContent = `${PRICE_INSIDE_WEEK} ريال / أسبوع`;
-    setBadge("داخل النطاق", true);
-  }else{
-    elInsideTxt.innerHTML = `<span style="color:var(--bad); font-weight:800">خارج النطاق ❌</span>`;
-    elPrice.textContent = PRICE_OUTSIDE_TEXT;
-    setBadge("خارج النطاق", false);
-  }
-
-  // عنوان مبسط (بدون geocoding مدفوع) — نكتب "الرياض"
-  elAddr.textContent = "الرياض (تحديد يدوي)";
-
+const geocoder = new MapboxGeocoder({
+  accessToken:mapboxgl.accessToken,
+  mapboxgl:mapboxgl,
+  marker:false,
+  countries:"sa",
+  language:"ar",
+  placeholder:"ابحث عن منشأة..."
 });
 
-/* ==============================
-   7) حفظ / تصدير / واتس
-================================ */
-const STORAGE_KEY = "wadheex_requests_v1";
+map.addControl(geocoder,"top-left");
 
-function getSaved(){
-  try{ return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); }
-  catch{ return []; }
-}
-function setSaved(arr){
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
-  elCount.textContent = arr.length;
-}
-setSaved(getSaved());
+let userMarker=null;
+let selectedScreen=null;
 
-document.getElementById("copyBtn").onclick = async ()=>{
-  if(!lastClick) return alert("حدد موقع أولاً");
-  const txt = `${lastClick.lat}, ${lastClick.lng}`;
-  try{
-    await navigator.clipboard.writeText(txt);
-    alert("تم النسخ ✅");
-  }catch{
-    prompt("انسخها يدويًا:", txt);
-  }
-};
+screens.forEach(screen=>{
+  new mapboxgl.Marker({color:"#ff0000"})
+    .setLngLat(screen.coords)
+    .setPopup(new mapboxgl.Popup().setText(screen.name))
+    .addTo(map);
+});
 
-document.getElementById("saveBtn").onclick = ()=>{
-  if(!lastClick) return alert("حدد موقع أولاً");
-  const arr = getSaved();
-  arr.push({
-    ts: new Date().toISOString(),
-    lat: lastClick.lat,
-    lng: lastClick.lng,
-    inside: insideArea,
-    price: insideArea ? PRICE_INSIDE_WEEK : null
+function calculateNearest(lng,lat){
+  let minDist=Infinity;
+  screens.forEach(screen=>{
+    const dist=turf.distance(
+      turf.point([lng,lat]),
+      turf.point(screen.coords)
+    );
+    if(dist<minDist){
+      minDist=dist;
+      selectedScreen=screen;
+    }
   });
-  setSaved(arr);
-  alert("تم حفظ الطلب ✅");
-};
+  return minDist;
+}
 
-document.getElementById("exportBtn").onclick = ()=>{
-  const arr = getSaved();
-  const blob = new Blob([JSON.stringify(arr,null,2)], {type:"application/json"});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "wadheex-requests.json";
+function pricing(dist){
+  if(dist<=2)return 4000;
+  if(dist<=5)return 3000;
+  return 2000;
+}
+
+function aiScore(dist){
+  return Math.max(50,100 - Math.round(dist*10));
+}
+
+function updateStats(lng,lat){
+  const dist=calculateNearest(lng,lat);
+  const price=pricing(dist);
+  const eta=Math.round((dist/50)*60);
+
+  document.getElementById("distanceStat").innerText="المسافة: "+dist.toFixed(2)+" كم";
+  document.getElementById("priceStat").innerText="السعر: "+price+" ريال";
+  document.getElementById("etaStat").innerText="وقت الوصول: "+eta+" دقيقة";
+  document.getElementById("aiStat").innerText="مؤشر الموقع: "+aiScore(dist)+"/100";
+}
+
+map.on("click",e=>{
+  if(userMarker)userMarker.remove();
+  userMarker=new mapboxgl.Marker({color:"#007bff"})
+    .setLngLat(e.lngLat)
+    .addTo(map);
+
+  updateStats(e.lngLat.lng,e.lngLat.lat);
+});
+
+geocoder.on("result",ev=>{
+  const [lng,lat]=ev.result.center;
+  if(userMarker)userMarker.remove();
+  userMarker=new mapboxgl.Marker({color:"#007bff"})
+    .setLngLat([lng,lat])
+    .addTo(map);
+
+  map.flyTo({center:[lng,lat],zoom:15});
+  updateStats(lng,lat);
+});
+
+function previewAd(){
+  const name=document.getElementById("businessName").value||"اسم منشأتك";
+  document.getElementById("previewBox").innerText=name;
+}
+
+function submitOrder(){
+  if(!selectedScreen){alert("حدد موقع أولاً");return;}
+  const name=document.getElementById("businessName").value;
+  const price=document.getElementById("priceStat").innerText;
+
+  const msg=encodeURIComponent(
+    "طلب حجز إعلان\n"+
+    "المنشأة: "+name+"\n"+
+    price+"\n"+
+    "الشاشة: "+selectedScreen.name
+  );
+
+  window.open("https://wa.me/966583611252?text="+msg,"_blank");
+}
+
+function downloadDetails(){
+  const data={
+    business:document.getElementById("businessName").value,
+    screen:selectedScreen?selectedScreen.name:null,
+    price:document.getElementById("priceStat").innerText
+  };
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;
+  a.download="wadheex-details.json";
   a.click();
-  URL.revokeObjectURL(url);
-};
-
-document.getElementById("clearBtn").onclick = ()=>{
-  if(confirm("تبغى تمسح كل الطلبات المحفوظة؟")){
-    setSaved([]);
-  }
-};
-
-document.getElementById("waBtn").onclick = ()=>{
-  if(!lastClick) return alert("حدد موقع أولاً");
-
-  if(!insideArea){
-    return alert("أنت خارج نطاق التغطية حالياً.\nبيظهر لك أقرب شاشة، لكن الطلب يتوقف لين توسع التغطية.");
-  }
-
-  const msg =
-`طلب إعلان — Wadheex Ads
-الموقع: الرياض
-الإحداثيات: ${lastClick.lat.toFixed(6)}, ${lastClick.lng.toFixed(6)}
-الحالة: داخل النطاق ✅
-التسعير المبدئي: ${PRICE_INSIDE_WEEK} ريال/أسبوع
-ملاحظة: أرفق اسم المنشأة + مدة الإعلان + نوع النشاط`;
-
-  const wa = `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(msg)}`;
-  window.open(wa, "_blank");
-};
+}
 </script>
+
 </body>
 </html>
