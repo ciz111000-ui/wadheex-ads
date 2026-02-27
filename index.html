@@ -325,14 +325,22 @@ map.on("load", async ()=>{
     });
 
     // تقريب على حدود النطاق
-    const bbox = turf.bbox(fc);
-    map.fitBounds(bbox, { padding: 60, duration: 700 });
-
  const bbox = turf.bbox(fc);
 map.fitBounds(bbox, { padding: 60, duration: 700 });
 
+
+// ✅ Marker ثابت لموقع الشاشة
+new mapboxgl.Marker({ color: "#00d1ff" })
+  .setLngLat([SCREEN1.lng, SCREEN1.lat])
+  .setPopup(
+    new mapboxgl.Popup({ offset: 25 })
+      .setText(`موقع الشاشة: ${SCREEN1.name}`)
+  )
+  .addTo(map);
+
+
 setDebug("🟢 جاهز — اضغط على الخريطة");
-setBadge("جاهز", true);
+setBadge("جاهز", true); 
   }catch(err){
     console.error(err);
     setDebug("🔴 خطأ: " + err.message);
