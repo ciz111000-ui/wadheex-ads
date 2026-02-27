@@ -3,602 +3,471 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Wadheex Ads — وميض</title>
+  <title>Wadheex Ads — منصة وميض</title>
 
-  <!-- Mapbox -->
   <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
   <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
-
-  <!-- Turf -->
   <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
 
   <style>
     :root{
-      --bg: #0b0f16;
-      --panel: rgba(18, 24, 36, 0.86);
-      --stroke: rgba(255,255,255,0.08);
-      --text: #e9eef7;
-      --muted:#a9b2c3;
-      --brand:#ff6600;
-      --danger:#ff3b30;
-      --ok:#2ecc71;
-      --shadow: 0 12px 40px rgba(0,0,0,.35);
-      --radius: 16px;
-      --font: system-ui, -apple-system, Segoe UI, Roboto, "Noto Kufi Arabic", "Noto Sans Arabic", Arial, sans-serif;
+      --bg:#0b0f17;
+      --panel:#0f1624;
+      --panel2:#0b1220;
+      --text:#e9eefb;
+      --muted:#aab6d6;
+      --stroke:rgba(255,255,255,.08);
+      --orange:#ff6600;
+      --orange2:#ff3300;
+      --ok:#22c55e;
+      --bad:#ef4444;
     }
+    html, body { height:100%; margin:0; background:var(--bg); font-family: system-ui, -apple-system, Segoe UI, Tahoma, Arial; color:var(--text); }
+    #app { position:relative; width:100%; height:100%; overflow:hidden; }
+    #map { position:absolute; inset:0; }
 
-    html, body { height: 100%; margin: 0; background: var(--bg); font-family: var(--font); }
-    #map { position: fixed; inset: 0; }
+    /* شريط أعلى */
+    .topbar{
+      position:absolute; top:14px; right:14px; left:14px;
+      display:flex; justify-content:space-between; gap:12px;
+      z-index:10; pointer-events:none;
+    }
+    .pill{
+      pointer-events:auto;
+      background:rgba(15,22,36,.85);
+      border:1px solid var(--stroke);
+      backdrop-filter: blur(10px);
+      border-radius:14px;
+      padding:10px 12px;
+      font-size:13px;
+      color:var(--muted);
+      max-width:520px;
+      line-height:1.4;
+      box-shadow: 0 12px 30px rgba(0,0,0,.35);
+    }
+    .pill b{ color:var(--text); }
 
     /* لوحة يمين */
     .panel{
-      position: fixed;
-      top: 18px;
-      right: 18px;
-      width: min(360px, calc(100% - 36px));
-      background: var(--panel);
-      border: 1px solid var(--stroke);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      color: var(--text);
-      overflow: hidden;
-      z-index: 10;
-      backdrop-filter: blur(10px);
+      position:absolute; top:70px; right:14px; bottom:14px;
+      width:360px; max-width: calc(100% - 28px);
+      background:rgba(15,22,36,.88);
+      border:1px solid var(--stroke);
+      backdrop-filter: blur(12px);
+      border-radius:18px;
+      z-index:10;
+      box-shadow: 0 18px 45px rgba(0,0,0,.45);
+      display:flex; flex-direction:column;
+      overflow:hidden;
     }
     .panel header{
-      padding: 14px 14px 10px;
-      border-bottom: 1px solid var(--stroke);
-      display:flex;
+      padding:14px 14px 10px;
+      border-bottom:1px solid var(--stroke);
+      background:linear-gradient(180deg, rgba(255,102,0,.10), transparent);
+    }
+    .panel header .title{
+      font-weight:800; letter-spacing:.2px;
+      display:flex; align-items:center; justify-content:space-between;
       gap:10px;
-      align-items:center;
-      justify-content:space-between;
     }
-    .title{
-      display:flex; flex-direction:column; gap:2px;
-    }
-    .title strong{ font-size: 14px; }
-    .title span{ font-size: 12px; color: var(--muted); }
-
     .badge{
-      font-size: 12px;
-      padding: 6px 10px;
-      border-radius: 999px;
-      border: 1px solid var(--stroke);
-      color: var(--muted);
-      background: rgba(255,255,255,.03);
+      font-size:12px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--stroke);
+      background:rgba(255,255,255,.03);
+      color:var(--muted);
+    }
+    .badge.ok{ color:var(--ok); border-color:rgba(34,197,94,.25); background:rgba(34,197,94,.08); }
+    .badge.bad{ color:var(--bad); border-color:rgba(239,68,68,.25); background:rgba(239,68,68,.08); }
+
+    .panel .content{
+      padding:12px 14px;
+      display:flex; flex-direction:column; gap:10px;
+      overflow:auto;
     }
 
-    .panel .body{ padding: 12px 14px 14px; display:flex; flex-direction:column; gap:10px; }
-    .row{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
-    .card{
-      border: 1px solid var(--stroke);
-      border-radius: 12px;
-      padding: 10px;
-      background: rgba(255,255,255,.03);
-      min-height: 56px;
-    }
-    .card .k{ font-size: 12px; color: var(--muted); margin-bottom: 6px; }
-    .card .v{ font-size: 13px; line-height: 1.3; word-break: break-word; }
-    .hint{
-      border: 1px dashed rgba(255,255,255,.15);
-      border-radius: 12px;
-      padding: 10px;
-      color: var(--muted);
-      font-size: 12px;
-      line-height: 1.6;
-    }
-    .hint b{ color: var(--text); }
-
-    .actions{ display:flex; gap:10px; }
-    button{
-      cursor:pointer;
-      border: none;
-      border-radius: 12px;
-      padding: 11px 12px;
-      font-weight: 700;
-      font-size: 13px;
-    }
-    .btn-primary{ background: var(--brand); color: white; flex: 1; }
-    .btn-ghost{ background: rgba(255,255,255,.06); color: var(--text); border: 1px solid var(--stroke); }
-    .btn-danger{ background: rgba(255,59,48,.14); color: #ffd1cf; border: 1px solid rgba(255,59,48,.28); }
-
-    /* زر سفلي (اختياري) */
-    .floating{
-      position: fixed;
-      bottom: 18px;
-      left: 18px;
-      z-index: 10;
-      display:flex;
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
       gap:10px;
     }
-    .toast{
-      position: fixed;
-      left: 18px;
-      top: 18px;
-      z-index: 11;
-      background: rgba(0,0,0,.55);
-      border: 1px solid var(--stroke);
-      color: var(--text);
-      padding: 10px 12px;
-      border-radius: 12px;
-      box-shadow: var(--shadow);
-      font-size: 12px;
-      line-height: 1.5;
-      max-width: 420px;
-      backdrop-filter: blur(10px);
+    .card{
+      background:rgba(11,18,32,.65);
+      border:1px solid var(--stroke);
+      border-radius:14px;
+      padding:10px;
     }
+    .label{ font-size:12px; color:var(--muted); margin-bottom:6px; }
+    .value{ font-size:14px; color:var(--text); min-height:18px; }
 
-    /* تحسين ظهور خريطة mapbox تحت اللوحة */
-    .mapboxgl-ctrl-bottom-right,
-    .mapboxgl-ctrl-bottom-left { z-index: 9; }
+    .row{ display:flex; gap:10px; }
+    .btn{
+      cursor:pointer;
+      border:1px solid var(--stroke);
+      background:rgba(255,255,255,.03);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:12px;
+      font-weight:700;
+      width:100%;
+    }
+    .btn:hover{ filter:brightness(1.08); }
+    .btn.orange{ background:var(--orange); border-color:rgba(255,102,0,.5); color:white; }
+    .btn.ghost{ background:rgba(255,255,255,.03); }
+    .btn.small{ padding:8px 10px; font-weight:700; }
+
+    .hint{
+      font-size:13px; color:var(--muted); line-height:1.5;
+      border:1px dashed rgba(255,255,255,.12);
+      border-radius:14px;
+      padding:10px 12px;
+      background:rgba(0,0,0,.15);
+    }
+    .hint b{ color:var(--text); }
+
+    /* إخفاء شعار mapbox controls خلف اللوحة */
+    .mapboxgl-ctrl-bottom-right{ right: 380px; }
+
+    /* على الجوال */
+    @media (max-width: 900px){
+      .panel{ width:auto; left:14px; right:14px; height: 46%; top:auto; bottom:14px; }
+      .mapboxgl-ctrl-bottom-right{ right: 14px; }
+      .topbar{ flex-direction:column; align-items:flex-start; }
+    }
   </style>
 </head>
 
 <body>
+<div id="app">
   <div id="map"></div>
 
-  <div class="toast" id="toast">
-    <b>Wadheex Ads — منصة وميض</b><br/>
-    اضغط على الخريطة لتحديد موقع منشأتك. النظام يبيّن لك إذا كنت داخل نطاق التغطية أو خارجها.
+  <div class="topbar">
+    <div class="pill"><b>Wadheex Ads — منصة وميض</b><br>اضغط على الخريطة أو ابحث بالعنوان. النظام يقول لك إذا داخل نطاق أقرب شاشة خلال 10 دقائق أو خارج النطاق.</div>
+    <div class="pill" id="debugPill">🟡 جاري التحميل…</div>
   </div>
 
   <aside class="panel">
     <header>
       <div class="title">
-        <strong>Wadheex Ads — منصة الحجز الذاتي</strong>
-        <span>اختيار موقع + تسعير + إرسال واتس</span>
+        <div>منصة الحجز الذاتي — Wadheex Ads</div>
+        <div class="badge" id="statusBadge">—</div>
       </div>
-      <div class="badge" id="statusBadge">جاري التحميل…</div>
+      <div style="margin-top:6px; font-size:12px; color:var(--muted)">اختيار موقع + تسعير + إرسال واتس</div>
     </header>
 
-    <div class="body">
-      <div class="row">
+    <div class="content">
+      <div class="grid">
         <div class="card">
-          <div class="k">موقع المنشأة</div>
-          <div class="v" id="placeText">—</div>
+          <div class="label">موقع المنشأة</div>
+          <div class="value" id="addr">—</div>
         </div>
         <div class="card">
-          <div class="k">الإحداثيات</div>
-          <div class="v" id="coordsText">—</div>
+          <div class="label">الإحداثيات</div>
+          <div class="value" id="coords">—</div>
         </div>
-      </div>
 
-      <div class="row">
         <div class="card">
-          <div class="k">الحالة</div>
-          <div class="v" id="insideText">—</div>
+          <div class="label">أقرب شاشة</div>
+          <div class="value" id="nearest">—</div>
         </div>
         <div class="card">
-          <div class="k">تسعير مبدئي</div>
-          <div class="v" id="pricePreview">—</div>
+          <div class="label">المسافة التقريبية</div>
+          <div class="value" id="dist">—</div>
+        </div>
+
+        <div class="card">
+          <div class="label">تسعير مبدئي</div>
+          <div class="value" id="price">—</div>
+        </div>
+        <div class="card">
+          <div class="label">الحالة</div>
+          <div class="value" id="insideTxt">—</div>
         </div>
       </div>
 
       <div class="hint">
-        <b>شرح سريع:</b><br/>
-        • إذا كنت <span style="color:var(--ok);font-weight:700">داخل النطاق</span> تقدر تقدم الطلب مباشرة.<br/>
-        • إذا كنت <span style="color:var(--danger);font-weight:700">خارج النطاق</span تظهر لك رسالة، وتقدر ترسل طلب “اقتراح توسعة” بالواتس.
+        <b>شرح سريع:</b><br>
+        إذا كنت <span style="color:var(--ok); font-weight:800">داخل النطاق</span> تقدر تقدم الطلب مباشرة.<br>
+        إذا كنت <span style="color:var(--bad); font-weight:800">خارج النطاق</span> يظهر لك أقرب شاشة لكن الطلب يتوقف لين توسع التغطية.
       </div>
 
-      <div class="actions">
-        <button class="btn-ghost" id="copyBtn">نسخ الإحداثيات</button>
-        <button class="btn-danger" id="resetBtn">تصفير التحديد</button>
+      <div class="row">
+        <button class="btn small" id="copyBtn">نسخ الإحداثيات</button>
+        <button class="btn small" id="saveBtn">حفظ هذا الطلب</button>
       </div>
 
-      <div class="actions">
-        <button class="btn-primary" id="submitBtn">تقديم طلب (WhatsApp)</button>
+      <button class="btn orange" id="waBtn">(WhatsApp) تقديم طلب</button>
+
+      <div class="row">
+        <button class="btn ghost" id="exportBtn">تصدير (JSON)</button>
+        <button class="btn ghost" id="clearBtn">مسح الطلبات</button>
       </div>
 
       <div class="card">
-        <div class="k">طلباتك المحفوظة (Local)</div>
-        <div class="v">
-          <span id="savedCount">0</span> طلب
-          <div style="margin-top:8px; display:flex; gap:10px;">
-            <button class="btn-ghost" id="saveLocalBtn" style="flex:1;">حفظ هذا الطلب</button>
-            <button class="btn-ghost" id="exportBtn" style="flex:1;">تصدير JSON</button>
-          </div>
-          <button class="btn-ghost" id="clearSavedBtn" style="margin-top:10px; width:100%;">مسح الطلبات</button>
-        </div>
+        <div class="label">طلباتك المحفوظة (Local)</div>
+        <div class="value"><span id="count">0</span> طلب</div>
       </div>
     </div>
   </aside>
+</div>
 
-  <div class="floating">
-    <button class="btn-ghost" id="fitBtn">تقريب على النطاق</button>
-  </div>
+<script>
+/* ==============================
+   0) إعداداتك (لا تغيّر إلا لو تبغى)
+================================ */
+mapboxgl.accessToken = "pk.eyJ1IjoibjktN3Z2IiwiYSI6ImNtbTJubnJjMDA4OGEycXNnaXN2M21lZ3QifQ.yZPWMAgrnQxnwZZdr8kwjA";
 
-  <script>
-    /***********************
-     * 1) إعداداتك الأساسية
-     ***********************/
-    // ✅ توكن Mapbox (نفس اللي أرسلته)
-    mapboxgl.accessToken =
-      "pk.eyJ1IjoibjktN3Z2IiwiYSI6ImNtbTJubnJjMDA4OGEycXNnaXN2M21lZ3QifQ.yZPWMAgrnQxnwZZdr8kwjA";
+// ملف النطاق (iso) — لازم يكون موجود جنب index.html
+const AREA_FILE = "./iso-screen-1.geojson";
 
-    // ✅ رقم واتساب (ضع رقمك أنت محليًا هنا بصيغة دولية بدون +)
-    // مثال السعودية: 9665XXXXXXXX
-    const WHATSAPP_PHONE = "966583611252"; // <-- غيّر هذا عندك لرقمك
+// رقم الواتس (بدون +)
+const WHATSAPP_PHONE = "966583611252";
 
-    // ✅ اسم ملف النطاق
-   const AREA_FILE = "./screen-1.geojson";
+// تسعير مبدئي (تقدر تعدله)
+const PRICE_INSIDE_WEEK = 2000;   // داخل النطاق
+const PRICE_OUTSIDE_TEXT = "خارج نطاق التغطية";
 
-    // ✅ تسعير بسيط (تقدر تعدله)
-    const PRICE_INSIDE_WEEK = 2000;   // داخل النطاق
-    const PRICE_OUTSIDE_TEXT = "— خارج نطاق التغطية";
+/* ==============================
+   1) عناصر UI
+================================ */
+const elAddr = document.getElementById("addr");
+const elCoords = document.getElementById("coords");
+const elNearest = document.getElementById("nearest");
+const elDist = document.getElementById("dist");
+const elPrice = document.getElementById("price");
+const elInsideTxt = document.getElementById("insideTxt");
+const elBadge = document.getElementById("statusBadge");
+const elCount = document.getElementById("count");
+const elDebug = document.getElementById("debugPill");
 
-    /***********************
-     * 2) إنشاء الخريطة
-     ***********************/
-    const map = new mapboxgl.Map({
-      container: "map",
-      style: "mapbox://styles/mapbox/streets-v11",
-      center: [46.67, 24.74],
-      zoom: 11
-    });
+function setBadge(text, ok=null){
+  elBadge.textContent = text;
+  elBadge.classList.remove("ok","bad");
+  if(ok===true) elBadge.classList.add("ok");
+  if(ok===false) elBadge.classList.add("bad");
+}
 
-    map.addControl(new mapboxgl.NavigationControl(), "bottom-right");
+function setDebug(text){
+  elDebug.textContent = text;
+}
 
-    /***********************
-     * 3) عناصر الواجهة
-     ***********************/
-    const elStatusBadge = document.getElementById("statusBadge");
-    const elPlaceText   = document.getElementById("placeText");
-    const elCoordsText  = document.getElementById("coordsText");
-    const elInsideText  = document.getElementById("insideText");
-    const elPrice       = document.getElementById("pricePreview");
-    const elSavedCount  = document.getElementById("savedCount");
-    const elToast       = document.getElementById("toast");
+/* ==============================
+   2) الخريطة
+================================ */
+const map = new mapboxgl.Map({
+  container: "map",
+  style: "mapbox://styles/mapbox/streets-v11",
+  center: [46.67, 24.74],
+  zoom: 11
+});
+map.addControl(new mapboxgl.NavigationControl(), "bottom-right");
 
-    const btnCopy       = document.getElementById("copyBtn");
-    const btnReset      = document.getElementById("resetBtn");
-    const btnSubmit     = document.getElementById("submitBtn");
-    const btnFit        = document.getElementById("fitBtn");
+let marker = null;
+let areaFeature = null;   // Feature Polygon/MultiPolygon للفحص
+let areaFC = null;        // FeatureCollection للرسم
+let insideArea = false;
+let lastClick = null;
 
-    const btnSaveLocal  = document.getElementById("saveLocalBtn");
-    const btnExport     = document.getElementById("exportBtn");
-    const btnClearSaved = document.getElementById("clearSavedBtn");
+/* ==============================
+   3) تطبيع GeoJSON (يتعامل مع ORS)
+      ORS أحياناً يحط Feature Point أولاً
+================================ */
+function isPolyType(t){ return t === "Polygon" || t === "MultiPolygon"; }
 
-    /***********************
-     * 4) متغيرات الحالة
-     ***********************/
-    let marker = null;
-    let areaFeature = null;        // Feature Polygon جاهز للفحص
-    let areaFC = null;             // FeatureCollection للرسم
-    let lastClick = null;          // {lng,lat, inside}
-
-    /***********************
-     * 5) دوال إصلاح geojson (مهم!)
-     * - تحل مشكلة: التغطية تطلع "جزء صغير" أو شكل غريب
-     * - السبب غالبًا: الإحداثيات lat/lng مقلوبة أو الحلقة غير مغلقة
-     ***********************/
-    function swapIfLatLng(p) {
-      const a = p[0], b = p[1];
-      // الرياض غالباً: lat 20-30 ، lng 40-60
-      // لو جاية [lat,lng] نقلبها
-      if (a > 15 && a < 35 && b > 35 && b < 60) return [b, a];
-      return p;
-    }
-
-    function closeRing(ring) {
-      if (!ring || ring.length < 3) return ring;
-      const first = ring[0];
-      const last  = ring[ring.length - 1];
-      if (first[0] !== last[0] || first[1] !== last[1]) ring.push(first);
-      return ring;
-    }
-
-    function normalizeFeature(input) {
-      if (!input) throw new Error("GeoJSON فاضي");
-
-      // FeatureCollection
-      if (input.type === "FeatureCollection") {
-        if (!input.features || !input.features.length) throw new Error("FeatureCollection بدون features");
-        input = input.features[0];
-      }
-
-      // Feature
-      if (input.type === "Feature") {
-        // ok
-      } else {
-        throw new Error("لازم يكون Feature أو FeatureCollection");
-      }
-
-      // MultiPolygon -> خذ أول Polygon
-      if (input.geometry && input.geometry.type === "MultiPolygon") {
-        input = {
-          type: "Feature",
-          properties: input.properties || {},
-          geometry: {
-            type: "Polygon",
-            coordinates: input.geometry.coordinates[0]
-          }
-        };
-      }
-
-      if (!input.geometry || input.geometry.type !== "Polygon") {
-        throw new Error("الملف لازم يكون Polygon أو MultiPolygon");
-      }
-
-      // أصلح الحلقة الخارجية فقط
-      let ring = input.geometry.coordinates[0];
-      ring = ring.map(swapIfLatLng);
-      ring = closeRing(ring);
-      input.geometry.coordinates[0] = ring;
-
-      return input;
-    }
-
-   async function loadArea() {
+async function loadArea(){
   const res = await fetch(AREA_FILE, { cache: "no-store" });
-  if (!res.ok) throw new Error("ما قدرت أقرأ ملف النطاق. تأكد اسمه ومساره (root).");
+  if(!res.ok) throw new Error("ما قدرت أقرأ ملف النطاق. تأكد الاسم والمسار: " + AREA_FILE);
 
   const geo = await res.json();
-
   let feature = null;
 
-  // 1) لو FeatureCollection: نبحث عن أول Polygon/MultiPolygon (نتجاهل Point)
-  if (geo.type === "FeatureCollection") {
-    feature = (geo.features || []).find(f =>
-      f &&
-      f.geometry &&
-      (f.geometry.type === "Polygon" || f.geometry.type === "MultiPolygon")
-    );
-  }
-  // 2) لو Feature مباشرة
-  else if (geo.type === "Feature") {
-    if (geo.geometry && (geo.geometry.type === "Polygon" || geo.geometry.type === "MultiPolygon")) {
-      feature = geo;
-    }
-  }
-  // 3) أي شيء ثاني (غالباً غلط)
-  else {
+  if(geo.type === "FeatureCollection"){
+    feature = (geo.features || []).find(f => f && f.geometry && isPolyType(f.geometry.type));
+  } else if(geo.type === "Feature") {
+    if(geo.geometry && isPolyType(geo.geometry.type)) feature = geo;
+  } else {
     throw new Error("صيغة الملف غير صحيحة. لازم FeatureCollection أو Feature.");
   }
 
-  // ✅ هذا السطر الناقص عندك: لو ما لقى Polygon
-  if (!feature) {
-    throw new Error("ملف النطاق ما فيه Polygon/MultiPolygon. ORS أحياناً يحط Point أول شي.");
-  }
+  if(!feature) throw new Error("ملف النطاق ما فيه Polygon/MultiPolygon (ممكن فيه Point فقط).");
 
-  // ✅ نخزن المضلع للفحص داخل/خارج
   areaFeature = feature;
-
-  // ✅ نخليه FeatureCollection للرسم على الخريطة
-  const areaFC = await loadArea();
-map.addSource("screen-area", { type: "geojson", data: areaFC });
+  areaFC = { type:"FeatureCollection", features:[feature] };
   return areaFC;
 }
-      const geo = await res.json();
-let feature;
 
-if (geo.type === "FeatureCollection") {
-  feature = geo.features.find(f =>
-    f.geometry &&
-    (f.geometry.type === "Polygon" || f.geometry.type === "MultiPolygon")
-  );
-} else {
-  feature = geo;
+/* ==============================
+   4) رسم النطاق + تقريب تلقائي
+================================ */
+map.on("load", async ()=>{
+  try{
+    setDebug("🟡 تحميل النطاق…");
+
+    const fc = await loadArea();
+
+    map.addSource("screen-area", { type:"geojson", data: fc });
+
+    map.addLayer({
+      id:"screen-fill",
+      type:"fill",
+      source:"screen-area",
+      paint:{ "fill-color":"#ff6600", "fill-opacity":0.28 }
+    });
+
+    map.addLayer({
+      id:"screen-outline",
+      type:"line",
+      source:"screen-area",
+      paint:{ "line-color":"#ff3300", "line-width":2 }
+    });
+
+    // تقريب على حدود النطاق
+    const bbox = turf.bbox(fc);
+    map.fitBounds(bbox, { padding: 60, duration: 700 });
+
+    setDebug("🟢 جاهز — اضغط على الخريطة");
+    setBadge("جاهز", true);
+  }catch(err){
+    console.error(err);
+    setDebug("🔴 خطأ: " + err.message);
+    setBadge("خطأ في التحميل", false);
+    alert("خطأ في تحميل النطاق:\n" + err.message + "\n\nافتح iso-screen-1.geojson وتأكد فيه Polygon/MultiPolygon.");
+  }
+});
+
+/* ==============================
+   5) أدوات: حساب مسافة تقريبية + عنوان تقريبي (بدون API إضافي)
+================================ */
+function kmBetween(lng1, lat1, lng2, lat2){
+  const p1 = turf.point([lng1,lat1]);
+  const p2 = turf.point([lng2,lat2]);
+  return turf.distance(p1,p2,{units:"kilometers"});
 }
-      areaFeature = feature;
-      areaFC = { type: "FeatureCollection", features: [feature] };
-      return areaFC;
-    }
 
-    function setBadge(text, ok = true) {
-      elStatusBadge.textContent = text;
-      elStatusBadge.style.color = ok ? "var(--muted)" : "#ffd1cf";
-      elStatusBadge.style.borderColor = ok ? "var(--stroke)" : "rgba(255,59,48,.28)";
-      elStatusBadge.style.background = ok ? "rgba(255,255,255,.03)" : "rgba(255,59,48,.14)";
-    }
+// (بسيطة) اسم "أقرب شاشة" — حالياً شاشة 1 (توسعها لاحقاً)
+function nearestScreenTo(lng, lat){
+  // مركز النطاق من المضلع
+  const center = turf.center(areaFC).geometry.coordinates; // [lng,lat]
+  const km = kmBetween(lng, lat, center[0], center[1]);
+  return { name:"Screen-1", km, center };
+}
 
-    function setInsideUI(inside) {
-      if (inside === true) {
-        elInsideText.innerHTML = `<span style="color:var(--ok);font-weight:800">داخل النطاق ✅</span>`;
-        elPrice.textContent = `${PRICE_INSIDE_WEEK} ريال / أسبوع`;
-      } else if (inside === false) {
-        elInsideText.innerHTML = `<span style="color:var(--danger);font-weight:800">خارج النطاق ❌</span>`;
-        elPrice.textContent = PRICE_OUTSIDE_TEXT;
-      } else {
-        elInsideText.textContent = "—";
-        elPrice.textContent = "—";
-      }
-    }
+/* ==============================
+   6) كليك على الخريطة
+================================ */
+map.on("click", (e)=>{
+  if(!areaFeature){
+    alert("النطاق ما انحمّل للحين…");
+    return;
+  }
 
-    function setCoordsUI(lng, lat) {
-      elCoordsText.textContent = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-    }
+  lastClick = { lng: e.lngLat.lng, lat: e.lngLat.lat };
 
-    function hideToastSoon() {
-      setTimeout(() => { if (elToast) elToast.style.display = "none"; }, 4500);
-    }
+  if(marker) marker.remove();
+  marker = new mapboxgl.Marker().setLngLat(e.lngLat).addTo(map);
 
-    /***********************
-     * 6) رسم النطاق على الخريطة
-     ***********************/
-    map.on("load", async () => {
-      try {
-        setBadge("تحميل النطاق…");
-        const fc = await loadArea();
+  const pt = turf.point([lastClick.lng, lastClick.lat]);
+  insideArea = turf.booleanPointInPolygon(pt, areaFeature);
 
-        map.addSource("screen-area", { type: "geojson", data: fc });
+  // أقرب شاشة + مسافة
+  const near = nearestScreenTo(lastClick.lng, lastClick.lat);
 
-        // تعبئة
-        map.addLayer({
-          id: "screen-fill",
-          type: "fill",
-          source: "screen-area",
-          paint: { "fill-color": "#ff6600", "fill-opacity": 0.28 }
-        });
+  // تعبئة البيانات
+  elCoords.textContent = `${lastClick.lat.toFixed(6)}, ${lastClick.lng.toFixed(6)}`;
+  elNearest.textContent = near.name;
+  elDist.textContent = `${near.km.toFixed(2)} كم`;
 
-        // حدود
-        map.addLayer({
-          id: "screen-outline",
-          type: "line",
-          source: "screen-area",
-          paint: { "line-color": "#ff3300", "line-width": 2 }
-        });
+  if(insideArea){
+    elInsideTxt.innerHTML = `<span style="color:var(--ok); font-weight:800">داخل النطاق ✅</span>`;
+    elPrice.textContent = `${PRICE_INSIDE_WEEK} ريال / أسبوع`;
+    setBadge("داخل النطاق", true);
+  }else{
+    elInsideTxt.innerHTML = `<span style="color:var(--bad); font-weight:800">خارج النطاق ❌</span>`;
+    elPrice.textContent = PRICE_OUTSIDE_TEXT;
+    setBadge("خارج النطاق", false);
+  }
 
-        // تقريب تلقائي على النطاق
-        const bbox = turf.bbox(fc);
-        map.fitBounds(bbox, { padding: 40, duration: 650 });
+  // عنوان مبسط (بدون geocoding مدفوع) — نكتب "الرياض"
+  elAddr.textContent = "الرياض (تحديد يدوي)";
 
-        setBadge("جاهز");
-        hideToastSoon();
-      } catch (err) {
-        console.error(err);
-        setBadge("خطأ في تحميل النطاق", false);
-        alert("فيه مشكلة في ملف النطاق screen-1.geojson:\n" + err.message);
-      }
-    });
+});
 
-    /***********************
-     * 7) كليك واحد فقط (بدون تكرار)
-     * - يحط Marker
-     * - يحسب داخل/خارج
-     * - يحدث اللوحة
-     ***********************/
-    map.on("click", async (e) => {
-      if (!areaFeature) {
-        alert("النطاق ما انحمّل للحين… انتظر ثانيتين وجرّب");
-        return;
-      }
+/* ==============================
+   7) حفظ / تصدير / واتس
+================================ */
+const STORAGE_KEY = "wadheex_requests_v1";
 
-      // marker
-      if (marker) marker.remove();
-      marker = new mapboxgl.Marker().setLngLat(e.lngLat).addTo(map);
+function getSaved(){
+  try{ return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); }
+  catch{ return []; }
+}
+function setSaved(arr){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+  elCount.textContent = arr.length;
+}
+setSaved(getSaved());
 
-      const lng = e.lngLat.lng;
-      const lat = e.lngLat.lat;
+document.getElementById("copyBtn").onclick = async ()=>{
+  if(!lastClick) return alert("حدد موقع أولاً");
+  const txt = `${lastClick.lat}, ${lastClick.lng}`;
+  try{
+    await navigator.clipboard.writeText(txt);
+    alert("تم النسخ ✅");
+  }catch{
+    prompt("انسخها يدويًا:", txt);
+  }
+};
 
-      setCoordsUI(lng, lat);
-      elPlaceText.textContent = "تم تحديد الموقع على الخريطة";
+document.getElementById("saveBtn").onclick = ()=>{
+  if(!lastClick) return alert("حدد موقع أولاً");
+  const arr = getSaved();
+  arr.push({
+    ts: new Date().toISOString(),
+    lat: lastClick.lat,
+    lng: lastClick.lng,
+    inside: insideArea,
+    price: insideArea ? PRICE_INSIDE_WEEK : null
+  });
+  setSaved(arr);
+  alert("تم حفظ الطلب ✅");
+};
 
-      const point = turf.point([lng, lat]);
-      const inside = turf.booleanPointInPolygon(point, areaFeature);
+document.getElementById("exportBtn").onclick = ()=>{
+  const arr = getSaved();
+  const blob = new Blob([JSON.stringify(arr,null,2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "wadheex-requests.json";
+  a.click();
+  URL.revokeObjectURL(url);
+};
 
-      setInsideUI(inside);
+document.getElementById("clearBtn").onclick = ()=>{
+  if(confirm("تبغى تمسح كل الطلبات المحفوظة؟")){
+    setSaved([]);
+  }
+};
 
-      lastClick = { lng, lat, inside, ts: Date.now() };
-    });
+document.getElementById("waBtn").onclick = ()=>{
+  if(!lastClick) return alert("حدد موقع أولاً");
 
-    /***********************
-     * 8) نسخ الإحداثيات
-     ***********************/
-    btnCopy.addEventListener("click", async () => {
-      if (!lastClick) return alert("حدد موقعك على الخريطة أولاً");
-      const text = `${lastClick.lat.toFixed(6)}, ${lastClick.lng.toFixed(6)}`;
-      try {
-        await navigator.clipboard.writeText(text);
-        setBadge("تم النسخ ✅");
-        setTimeout(() => setBadge("جاهز"), 1200);
-      } catch {
-        alert("ماقدرت أنسخ تلقائياً. انسخها يدويًا:\n" + text);
-      }
-    });
+  if(!insideArea){
+    return alert("أنت خارج نطاق التغطية حالياً.\nبيظهر لك أقرب شاشة، لكن الطلب يتوقف لين توسع التغطية.");
+  }
 
-    /***********************
-     * 9) تصفير التحديد
-     ***********************/
-    btnReset.addEventListener("click", () => {
-      if (marker) marker.remove();
-      marker = null;
-      lastClick = null;
-      elPlaceText.textContent = "—";
-      elCoordsText.textContent = "—";
-      setInsideUI(null);
-      setBadge("جاهز");
-    });
+  const msg =
+`طلب إعلان — Wadheex Ads
+الموقع: الرياض
+الإحداثيات: ${lastClick.lat.toFixed(6)}, ${lastClick.lng.toFixed(6)}
+الحالة: داخل النطاق ✅
+التسعير المبدئي: ${PRICE_INSIDE_WEEK} ريال/أسبوع
+ملاحظة: أرفق اسم المنشأة + مدة الإعلان + نوع النشاط`;
 
-    /***********************
-     * 10) تقريب على النطاق
-     ***********************/
-    btnFit.addEventListener("click", () => {
-      if (!areaFC) return;
-      const bbox = turf.bbox(areaFC);
-      map.fitBounds(bbox, { padding: 40, duration: 550 });
-    });
-
-    /***********************
-     * 11) WhatsApp إرسال الطلب
-     * - داخل النطاق: طلب إعلان
-     * - خارج النطاق: اقتراح توسعة
-     ***********************/
-    btnSubmit.addEventListener("click", () => {
-      if (!lastClick) return alert("حدد موقعك على الخريطة أولاً");
-
-      const { lat, lng, inside } = lastClick;
-
-      const type = inside ? "طلب إعلان داخل النطاق" : "اقتراح توسعة (خارج النطاق)";
-      const price = inside ? `${PRICE_INSIDE_WEEK} ريال/أسبوع` : "خارج التغطية";
-      const link = `https://www.google.com/maps?q=${lat},${lng}`;
-
-      const msg =
-`Wadheex Ads — وميض
-${type}
-
-📍 الإحداثيات: ${lat.toFixed(6)}, ${lng.toFixed(6)}
-🧭 الرابط: ${link}
-💳 التسعير: ${price}
-
-ملاحظات (اختياري):
-- اسم المنشأة:
-- الحي:
-- مدة الإعلان:`;
-
-      // افتح واتس
-      const wa = `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(msg)}`;
-      window.open(wa, "_blank");
-    });
-
-    /***********************
-     * 12) حفظ الطلبات محلياً + تصدير JSON
-     ***********************/
-    const STORAGE_KEY = "wadheex_saved_requests_v1";
-
-    function readSaved() {
-      try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); }
-      catch { return []; }
-    }
-    function writeSaved(list) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
-      elSavedCount.textContent = String(list.length);
-    }
-    function refreshSavedCount() {
-      elSavedCount.textContent = String(readSaved().length);
-    }
-    refreshSavedCount();
-
-    btnSaveLocal.addEventListener("click", () => {
-      if (!lastClick) return alert("حدد موقعك على الخريطة أولاً");
-      const list = readSaved();
-      list.unshift({
-        ...lastClick,
-        price: lastClick.inside ? PRICE_INSIDE_WEEK : null
-      });
-      writeSaved(list);
-      setBadge("تم الحفظ ✅");
-      setTimeout(() => setBadge("جاهز"), 1200);
-    });
-
-    btnExport.addEventListener("click", () => {
-      const list = readSaved();
-      const blob = new Blob([JSON.stringify(list, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "wadheex-requests.json";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-    });
-
-    btnClearSaved.addEventListener("click", () => {
-      if (!confirm("متأكد تبغى تمسح كل الطلبات المحفوظة؟")) return;
-      writeSaved([]);
-      setBadge("تم المسح");
-      setTimeout(() => setBadge("جاهز"), 1200);
-    });
-  </script>
+  const wa = `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(msg)}`;
+  window.open(wa, "_blank");
+};
+</script>
 </body>
 </html>
