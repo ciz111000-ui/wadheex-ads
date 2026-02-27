@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Wadheex X – Stable Pro</title>
+<title>Wadheex X – Mobile/Desk Pro</title>
 
 <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet"/>
 <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
@@ -19,128 +19,103 @@
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:#fff;font-family:system-ui}
 
-/* ===== Header ===== */
+/* Header */
 .header{
-  height:70px;
-  background:#0b0b15;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:0 24px;
-  border-bottom:1px solid rgba(255,255,255,.08);
-  position:sticky; top:0; z-index:20;
+  height:70px;background:#0b0b15;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 20px;border-bottom:1px solid rgba(255,255,255,.08);
+  position:sticky;top:0;z-index:20;
 }
-.logo svg{
-  filter:drop-shadow(0 0 10px rgba(0,200,255,.6));
-}
+.logo{font-weight:bold;font-size:22px;color:#00e0ff}
 .start-btn{
-  padding:10px 18px;
+  padding:8px 16px;border-radius:8px;
   background:linear-gradient(90deg,var(--blue1),var(--blue2));
-  border:none;color:#fff;border-radius:8px;cursor:pointer;
+  border:none;color:#fff;cursor:pointer;
 }
 
-/* ===== Map ===== */
+/* Map */
 .map-wrap{position:relative;height:calc(100vh - 70px)}
 #map{position:absolute;inset:0}
 
-/* ===== Panel ===== */
+/* Panel (Desktop default) */
 .panel{
-  position:absolute; top:0; right:0;
-  width:380px; height:100%;
+  position:absolute;top:0;right:0;
+  width:380px;height:100%;
   background:var(--glass);
   backdrop-filter:blur(18px);
   border-left:1px solid rgba(255,255,255,.08);
-  padding:22px;
-  z-index:10;
+  padding:20px;z-index:10;
   transition:transform .35s ease;
 }
-.panel.collapsed{ transform:translateX(330px); }
+.panel.collapsed{transform:translateX(340px)}
 
 .toggle{
-  position:absolute; left:-38px; top:50%;
+  position:absolute;left:-40px;top:50%;
   transform:translateY(-50%);
-  width:38px; height:80px;
-  background:rgba(20,20,35,.9);
+  width:40px;height:80px;
+  background:rgba(20,20,35,.95);
   border-radius:10px 0 0 10px;
-  display:flex; align-items:center; justify-content:center;
-  cursor:pointer; border:1px solid rgba(255,255,255,.08);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:20px;
+  border:1px solid rgba(255,255,255,.08);
 }
 
-.panel h3{margin:0 0 12px}
-.info{margin:8px 0}
-.status{margin:10px 0; font-weight:bold}
-
-.panel input, .panel select{
-  width:100%; padding:10px; margin:6px 0;
-  background:#0f0f18; border:1px solid #222;
-  color:#fff; border-radius:6px;
+/* Form */
+.panel input{
+  width:100%;padding:12px;margin:10px 0;
+  background:#0f0f18;border:1px solid #222;
+  color:#fff;border-radius:6px;font-size:16px;
 }
-.time-row{display:flex; gap:6px;}
 .panel button{
-  width:100%; padding:12px; margin-top:10px;
+  width:100%;padding:14px;margin-top:10px;
   background:linear-gradient(90deg,#8a2be2,#b26cff);
-  border:none; color:#fff; border-radius:8px; cursor:pointer;
+  border:none;color:#fff;border-radius:8px;
+  font-size:16px;cursor:pointer;
 }
-.panel button:disabled{opacity:.4}
+.status{margin:10px 0;font-weight:bold}
 
-/* Mobile */
+/* ===== Mobile Bottom Sheet ===== */
 @media(max-width:900px){
-  .panel{ width:100%; height:55%; bottom:0; top:auto; border-left:none; border-top:1px solid rgba(255,255,255,.08); }
-  .panel.collapsed{ transform:translateY(85%); }
-  .toggle{ left:50%; transform:translate(-50%,-50%); top:-18px; width:80px; height:36px; border-radius:10px 10px 0 0;}
+  .panel{
+    width:100%;height:65%;
+    right:0;top:auto;bottom:0;
+    border-left:none;border-top:1px solid rgba(255,255,255,.08);
+    border-radius:20px 20px 0 0;
+    overflow-y:auto;
+  }
+  .panel.collapsed{transform:translateY(85%)}
+  .toggle{
+    left:50%;top:-18px;
+    transform:translate(-50%,-50%);
+    width:70px;height:30px;
+    border-radius:12px;
+  }
 }
 </style>
 </head>
 <body>
 
 <header class="header">
-  <div class="logo">
-    <svg viewBox="0 0 200 80" width="150">
-      <defs>
-        <linearGradient id="grad" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stop-color="#00c6ff"/>
-          <stop offset="100%" stop-color="#0072ff"/>
-        </linearGradient>
-      </defs>
-      <text x="10" y="55" font-size="50" font-weight="bold"
-            fill="url(#grad)" style="letter-spacing:-5px">W</text>
-      <text x="70" y="55" font-size="50" font-weight="bold"
-            fill="#00e0ff">X</text>
-    </svg>
-  </div>
+  <div class="logo">W X</div>
   <button class="start-btn" onclick="scrollToMap()">ابدأ الحجز</button>
 </header>
 
 <section class="map-wrap" id="mapSection">
   <div id="map"></div>
 
-  <div class="panel" id="panel">
+  <div class="panel collapsed" id="panel">
     <div class="toggle" onclick="togglePanel()">☰</div>
-    <h3>طلب إعلان (أسبوع)</h3>
 
-    <div class="info" id="screenName">اختر موقع على الخريطة</div>
-    <div class="info" id="duration"></div>
-    <div class="info" id="price"></div>
+    <h3>طلب إعلان (أسبوع)</h3>
+    <div id="screenName">اختر موقع على الخريطة</div>
+    <div id="duration"></div>
+    <div id="price"></div>
     <div class="status" id="status"></div>
 
     <input id="bizName" placeholder="اسم المنشأة"/>
 
-    <label>تاريخ بداية الإعلان</label>
-    <input id="startDate" type="date"/>
-
-    <label>وقت تشغيل الإعلان</label>
-    <div class="time-row">
-      <select id="hour">
-        <option value="">الساعة</option>
-      </select>
-      <select id="minute">
-        <option value="">الدقيقة</option>
-      </select>
-      <select id="ampm">
-        <option value="AM">AM</option>
-        <option value="PM">PM</option>
-      </select>
-    </div>
+    <label>تاريخ ووقت بداية الإعلان</label>
+    <input id="startDateTime" type="datetime-local"/>
 
     <button id="bookBtn" disabled onclick="confirmBooking()">تأكيد الحجز</button>
   </div>
@@ -157,7 +132,6 @@ const map=new mapboxgl.Map({
 });
 
 map.addControl(new mapboxgl.NavigationControl());
-map.addControl(new mapboxgl.GeolocateControl({trackUserLocation:true}));
 
 const MAX_KM=8;
 
@@ -181,35 +155,19 @@ map.on("load",()=>{
 
     map.addSource(id,{type:"geojson",data:circle});
     map.addLayer({
-      id:id,
-      type:"fill",
-      source:id,
+      id:id,type:"fill",source:id,
       paint:{
         "fill-color":screen.color,
-        "fill-opacity":0.12
+        "fill-opacity":0.15
       }
     });
   });
 
-  // تعبئة الساعات
-  const hour=document.getElementById("hour");
-  for(let i=1;i<=12;i++){
-    let o=document.createElement("option");
-    o.value=i; o.text=i;
-    hour.appendChild(o);
-  }
-  // تعبئة الدقائق
-  const minute=document.getElementById("minute");
-  for(let i=0;i<60;i++){
-    let o=document.createElement("option");
-    o.value=i.toString().padStart(2,"0");
-    o.text=i.toString().padStart(2,"0");
-    minute.appendChild(o);
-  }
-
-  // منع اختيار تاريخ في الماضي
-  const today=new Date().toISOString().split("T")[0];
-  document.getElementById("startDate").setAttribute("min",today);
+  // منع اختيار وقت ماضي
+  const now=new Date();
+  now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
+  document.getElementById("startDateTime").min=
+    now.toISOString().slice(0,16);
 });
 
 map.on("click",(e)=>{
@@ -236,9 +194,7 @@ map.on("click",(e)=>{
 
   if(inside.length===0){
     status.innerText="❌ خارج نطاق 10 دقائق";
-    btn.disabled=true;
-    selected=null;
-    return;
+    btn.disabled=true; selected=null; return;
   }
 
   inside.sort((a,b)=>a.distance-b.distance);
@@ -252,47 +208,34 @@ map.on("click",(e)=>{
     chosen.distance<=5?3000:2000;
 
   document.getElementById("screenName").innerText=chosen.screen.name;
-  document.getElementById("duration").innerText="وقت الوصول التقريبي: "+((chosen.distance/8)*10).toFixed(1)+" دقيقة";
+  document.getElementById("duration").innerText=
+    "وقت الوصول التقريبي: "+((chosen.distance/8)*10).toFixed(1)+" دقيقة";
   document.getElementById("price").innerText="السعر: "+price+" ريال";
   status.innerText="✅ داخل نطاق 10 دقائق";
   btn.disabled=false;
-
-  document.getElementById("panel").style.borderLeft="4px solid "+chosen.screen.color;
 });
 
 function togglePanel(){
   document.getElementById("panel").classList.toggle("collapsed");
 }
-
 function scrollToMap(){
   document.getElementById("mapSection").scrollIntoView({behavior:"smooth"});
 }
-
 function confirmBooking(){
-  if(!selected) return;
-
   const name=document.getElementById("bizName").value;
-  const date=document.getElementById("startDate").value;
-  const hour=document.getElementById("hour").value;
-  const minute=document.getElementById("minute").value;
-  const ampm=document.getElementById("ampm").value;
+  const dateTime=document.getElementById("startDateTime").value;
 
-  if(!name || !date || !hour || !minute){
-    alert("الرجاء تعبئة جميع الحقول");
-    return;
+  if(!selected || !name || !dateTime){
+    alert("الرجاء تعبئة جميع الحقول");return;
   }
 
-  const time=hour+":"+minute+" "+ampm;
-
   alert(
-    "تم استلام طلبك\n\n" +
-    "اسم المنشأة: "+name+"\n" +
-    "الشاشة: "+selected.screen.name+"\n" +
-    "تاريخ البدء: "+date+"\n" +
-    "وقت التشغيل: "+time
+    "تم استلام طلبك\n\n"+
+    "اسم المنشأة: "+name+"\n"+
+    "الشاشة: "+selected.screen.name+"\n"+
+    "تاريخ ووقت البدء: "+dateTime
   );
 }
 </script>
-
 </body>
 </html>
