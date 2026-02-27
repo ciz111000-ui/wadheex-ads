@@ -1,902 +1,413 @@
-``html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wadheex X - منصة الإعلانات الذكية</title>
-    <link href='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css' rel='stylesheet' />
-    <script src='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js'></script>
-    <script src='https://unpkg.com/@turf/turf@6/turf.min.js'></script>
-    <style>
-         {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica', 'Arial', sans-serif;
-        }
-
-        :root {
-            --primary: #00FFC2;
-            --secondary: #FF00F5;
-            --accent: #FFD700;
-            --dark: #0A0E27;
-            --darker: #04081F;
-            --light: rgba(255, 255, 255, 0.95);
-            --glass: rgba(255, 255, 255, 0.05);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --success: #00FF88;
-            --warning: #FFB800;
-            --danger: #FF3366;
-        }
-
-        body {
-            overflow: hidden;
-            background: var(--darker);
-            color: var(--light);
-            height: 100vh;
-            position: relative;
-        }
-
-        #map {
-            width: 100%;
-            height: 100vh;
-        }
-
-        .logo {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            z-index: 1000;
-            background: var(--glass);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            padding: 12px 24px;
-            border-radius: 12px;
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: var(--primary);
-            text-shadow: 0 0 20px rgba(0, 255, 194, 0.5);
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.8; }
-        }
-
-        .side-panel {
-            position: fixed;
-            right: -400px;
-            top: 0;
-            width: 400px;
-            height: 100vh;
-            background: var(--glass);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-left: 1px solid var(--glass-border);
-            z-index: 1001;
-            transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            padding: 30px;
-            overflow-y: auto;
-            box-shadow: -10px 0 40px rgba(0, 0, 0, 0.3);
-        }
-
-        .side-panel.active {
-            right: 0;
-        }
-
-        .panel-toggle {
-            position: absolute;
-            left: -50px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 50px;
-            height: 100px;
-            background: var(--glass);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            border-right: none;
-            border-radius: 20px 0 0 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .panel-toggle:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .panel-toggle svg {
-            width: 24px;
-            height: 24px;
-            fill: var(--light);
-            transition: transform 0.3s ease;
-        }
-
-        .side-panel.active .panel-toggle svg {
-            transform: rotate(180deg);
-        }
-
-        .panel-header {
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid var(--glass-border);
-        }
-
-        .panel-header h2 {
-            font-size: 1.8rem;
-            color: var(--primary);
-            margin-bottom: 10px;
-            text-shadow: 0 0 20px rgba(0, 255, 194, 0.3);
-        }
-
-        .status-card {
-            background: var(--glass);
-            border: 1px solid var(--glass-border);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 25px;
-            position: relative;
-            overflow: hidden;
-            transition: all 0.3s ease;
-        }
-
-        .status-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, var(--primary), var(--secondary));
-            transition: all 0.3s ease;
-        }
-
-        .status-card.danger::before {
-            background: var(--danger);
-        }
-
-        .status-card.success::before {
-            background: var(--success);
-        }
-
-        .status-indicator {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 15px;
-        }
-
-        .status-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: var(--warning);
-            animation: blink 2s infinite;
-        }
-
-        .status-dot.active {
-            background: var(--success);
-            animation: none;
-        }
-
-        .status-dot.inactive {
-            background: var(--danger);
-            animation: none;
-        }
-
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
-        }
-
-        .location-info {
-            margin-top: 15px;
-        }
-
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 0;
-            color: rgba(255, 255, 255, 0.8);
-        }
-
-        .info-value {
-            font-weight: bold;
-            color: var(--light);
-        }
-
-        .form-section {
-            margin-top: 30px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0.9);
-            font-weight: 500;
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 12px 16px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            color: var(--light);
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            outline: none;
-        }
-
-        .form-control:focus {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(0, 255, 194, 0.1);
-        }
-
-        .form-control.error {
-            border-color: var(--danger);
-        }
-
-        select.form-control {
-            cursor: pointer;
-            appearance: none;
-            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-            background-repeat: no-repeat;
-            background-position: left 12px center;
-            background-size: 20px;
-            padding-left: 40px;
-        }
-
-        .checkbox-group {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 16px;
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .checkbox-group:hover {
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        .checkbox-group input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
-            accent-color: var(--primary);
-            cursor: pointer;
-        }
-
-        .price-display {
-            margin-top: 30px;
-            padding: 20px;
-            background: linear-gradient(135deg, rgba(0, 255, 194, 0.1), rgba(255, 0, 245, 0.1));
-            border-radius: 16px;
-            border: 1px solid var(--glass-border);
-            text-align: center;
-        }
-
-        .price-label {
-            font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0.7);
-            margin-bottom: 10px;
-        }
-
-        .price-value {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: var(--primary);
-            text-shadow: 0 0 30px rgba(0, 255, 194, 0.5);
-        }
-
-        .price-currency {
-            font-size: 1.2rem;
-            margin-right: 8px;
-            opacity: 0.8;
-        }
-
-        .btn {
-            width: 100%;
-            padding: 16px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 25px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: var(--darker);
-            box-shadow: 0 4px 20px rgba(0, 255, 194, 0.3);
-        }
-
-        .btn-primary:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 30px rgba(0, 255, 194, 0.5);
-        }
-
-        .btn-primary:active {
-            transform: translateY(0);
-        }
-
-        .btn-primary:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-            box-shadow: none;
-        }
-
-        .btn::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.3);
-            transform: translate(-50%, -50%);
-            transition: width 0.6s, height 0.6s;
-        }
-
-        .btn:active::after {
-            width: 300px;
-            height: 300px;
-        }
-
-        .error-message {
-            color: var(--danger);
-            font-size: 0.85rem;
-            margin-top: 5px;
-            display: none;
-        }
-
-        .error-message.show {
-            display: block;
-            animation: shake 0.3s ease;
-        }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
-        }
-
-        .mapboxgl-popup {
-            max-width: 280px !important;
-        }
-
-        .mapboxgl-popup-content {
-            background: var(--glass) !important;
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            border-radius: 12px !important;
-            padding: 20px !important;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-        }
-
-        .mapboxgl-popup-close-button {
-            color: var(--light) !important;
-            font-size: 20px !important;
-            padding: 5px !important;
-        }
-
-        .mapboxgl-popup-close-button:hover {
-            background: rgba(255, 255, 255, 0.1) !important;
-            border-radius: 50%;
-        }
-
-        .popup-content {
-            color: var(--light);
-        }
-
-        .popup-title {
-            font-size: 1.2rem;
-            font-weight: bold;
-            margin-bottom: 10px;
-            color: var(--primary);
-        }
-
-        .popup-info {
-            font-size: 0.9rem;
-            line-height: 1.6;
-        }
-
-        .screen-marker {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-            animation: float 3s ease-in-out infinite;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-5px); }
-        }
-
-        .screen-marker::before {
-            content: '';
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            background: inherit;
-            animation: ripple 2s ease-out infinite;
-            opacity: 0.6;
-        }
-
-        @keyframes ripple {
-            0% {
-                transform: scale(1);
-                opacity: 0.6;
-            }
-            100% {
-                transform: scale(2);
-                opacity: 0;
-            }
-        }
-
-        .screen-marker:hover {
-            transform: scale(1.1);
-        }
-
-        .screen-marker svg {
-            width: 24px;
-            height: 24px;
-            fill: white;
-            z-index: 1;
-        }
-
-        @media (max-width: 768px) {
-            .logo {
-                font-size: 1.2rem;
-                padding: 10px 16px;
-            }
-
-            .side-panel {
-                width: 100%;
-                height: auto;
-                max-height: 70vh;
-                bottom: -100%;
-                right: 0;
-                top: auto;
-                border-left: none;
-                border-top: 1px solid var(--glass-border);
-                border-radius: 20px 20px 0 0;
-                transition: bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            }
-
-            .side-panel.active {
-                bottom: 0;
-            }
-
-            .panel-toggle {
-                left: 50%;
-                transform: translateX(-50%);
-                top: -40px;
-                width: 80px;
-                height: 40px;
-                border-radius: 20px 20px 0 0;
-                border: 1px solid var(--glass-border);
-                border-bottom: none;
-            }
-
-            .panel-toggle svg {
-                transform: rotate(90deg);
-            }
-
-            .side-panel.active .panel-toggle svg {
-                transform: rotate(-90deg);
-            }
-
-            .price-value {
-                font-size: 2rem;
-            }
-        }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Wadmmed X</title>
+
+<!-- Mapbox -->
+<link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+
+<!-- Turf -->
+<script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+
+<style>
+body,html{
+  margin:0;
+  padding:0;
+  font-family:"Tajawal",sans-serif;
+  background:#0a0a0a;
+  overflow:hidden;
+}
+
+/* الخريطة */
+#map{
+  position:absolute;
+  top:0;left:0;
+  width:100%;
+  height:100%;
+}
+
+/* اللوحة الجانبية */
+.panel{
+  position:fixed;
+  right:0;
+  top:0;
+  width:350px;
+  height:100%;
+  background:rgba(255,255,255,0.08);
+  backdrop-filter:blur(15px);
+  border-left:1px solid rgba(255,255,255,0.15);
+  padding:20px;
+  box-sizing:border-box;
+  transform:translateX(100%);
+  transition:0.4s ease;
+  z-index:999;
+}
+.panel.open{
+  transform:translateX(0);
+}
+
+.panel-toggle{
+  position:fixed;
+  right:20px;
+  top:20px;
+  width:45px;
+  height:45px;
+  background:rgba(255,255,255,0.15);
+  backdrop-filter:blur(10px);
+  border-radius:12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  z-index:1000;
+  transition:0.3s;
+}
+.panel-toggle:hover{
+  background:rgba(255,255,255,0.25);
+}
+
+/* موبايل */
+@media(max-width:768px){
+  .panel{
+    width:100%;
+    height:45%;
+    bottom:0;
+    top:auto;
+    right:0;
+    transform:translateY(100%);
+    border-left:none;
+    border-top:1px solid rgba(255,255,255,0.15);
+  }
+  .panel.open{
+    transform:translateY(0);
+  }
+  .panel-toggle{
+    right:50%;
+    transform:translateX(50%);
+    top:auto;
+    bottom:20px;
+  }
+}
+
+/* محتوى اللوحة */
+.panel h2{
+  margin-top:0;
+  color:#fff;
+  font-size:22px;
+}
+.label{
+  color:#ddd;
+  margin:8px 0 4px;
+}
+input,select{
+  width:100%;
+  padding:10px;
+  border-radius:8px;
+  border:none;
+  margin-bottom:10px;
+  background:rgba(255,255,255,0.15);
+  color:#fff;
+}
+input:focus,select:focus{
+  outline:none;
+  background:rgba(255,255,255,0.25);
+}
+button{
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  background:#4caf50;
+  color:#fff;
+  font-size:18px;
+  cursor:pointer;
+  margin-top:10px;
+  transition:0.3s;
+}
+button:disabled{
+  background:#555;
+  cursor:not-allowed;
+}
+.status{
+  padding:10px;
+  border-radius:8px;
+  margin-bottom:10px;
+  text-align:center;
+  font-weight:bold;
+  color:#fff;
+}
+.status.ok{background:#2e7d32;}
+.status.no{background:#b71c1c;}
+
+/* Marker */
+.marker{
+  width:20px;
+  height:20px;
+  border-radius:50%;
+  box-shadow:0 0 10px 4px rgba(255,255,255,0.6);
+  cursor:pointer;
+}
+
+/* Popup */
+.mapboxgl-popup{
+  max-width:250px;
+  font-family:"Tajawal",sans-serif;
+}
+.mapboxgl-popup-content{
+  background:#111;
+  color:#fff;
+  border-radius:10px;
+  padding:15px;
+  border:1px solid #333;
+}
+
+/* السعر */
+.price-box{
+  background:rgba(0,0,0,0.4);
+  padding:12px;
+  border-radius:10px;
+  color:#fff;
+  font-size:20px;
+  text-align:center;
+  margin-top:10px;
+  border:1px solid rgba(255,255,255,0.2);
+}
+</style>
 </head>
-<body>
-    <div id="map"></div>
-    
-    <div class="logo">Wadheex X</div>
-    
-    <div class="side-panel" id="sidePanel">
-        <div class="panel-toggle" onclick="togglePanel()">
-            <svg viewBox="0 0 24 24">
-                <path d="M15 18l-6-6 6-6"/>
-            </svg>
-        </div>
-        
-        <div class="panel-header">
-            <h2>حجز شاشة إعلانية</h2>
-            <p style="color: rgba(255,255,255,0.6); font-size: 0.9rem;">اختر موقعك على الخريطة للبدء</p>
-        </div>
-        
-        <div class="status-card" id="statusCard">
-            <div class="status-indicator">
-                <div class="status-dot" id="statusDot"></div>
-                <span id="statusText">في انتظار تحديد الموقع...</span>
-            </div>
-            <div class="location-info" id="locationInfo" style="display: none;">
-                <div class="info-row">
-                    <span>الشاشة الأقرب:</span>
-                    <span class="info-value" id="screenName">-</span>
-                </div>
-                <div class="info-row">
-                    <span>المسافة:</span>
-                    <span class="info-value" id="distance">-</span>
-                </div>
-                <div class="info-row">
-                    <span>وقت الوصول المتوقع:</span>
-                    <span class="info-value" id="arrivalTime">-</span>
-                </div>
-            </div>
-        </div>
-        
-        <form class="form-section" id="bookingForm">
-            <div class="form-group">
-                <label>اسم المنشأة </label>
-                <input type="text" class="form-control" id="companyName" placeholder="أدخل اسم المنشأة" required>
-            </div>
-            
-            <div class="form-group">
-                <label>نوع المنشأة </label>
-                <select class="form-control" id="companyType" required>
-                    <option value="">اختر نوع المنشأة</option>
-                    <option value="restaurant">مطعم</option>
-                    <option value="retail">متجر تجزئة</option>
-                    <option value="service">خدمات</option>
-                    <option value="tech">تقنية</option>
-                    <option value="health">صحة</option>
-                    <option value="education">تعليم</option>
-                    <option value="real-estate">عقارات</option>
-                    <option value="other">أخرى</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label>عدد الشاشات </label>
-                <select class="form-control" id="screenCount" required onchange="updatePrice()">
-                    <option value="1">شاشة واحدة</option>
-                    <option value="2">شاشتان</option>
-                    <option value="3">ثلاث شاشات</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label>تاريخ ووقت بداية الإعلان </label>
-                <input type="datetime-local" class="form-control" id="startDate" required onchange="updateEndDate()">
-            </div>
-            
-            <div class="form-group">
-                <label>مدة الإعلان</label>
-                <input type="text" class="form-control" value="7 أيام" disabled style="opacity: 0.7;">
-            </div>
-            
-            <div class="form-group">
-                <div class="checkbox-group">
-                    <input type="checkbox" id="needDesign" onchange="updatePrice()">
-                    <label for="needDesign" style="margin: 0; cursor: pointer;">هل تحتاج تصميم إعلان احترافي؟ (+800 ريال)</label>
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label>رقم التواصل </label>
-                <input type="tel" class="form-control" id="phoneNumber" placeholder="05XXXXXXXX" maxlength="10" required>
-                <div class="error-message" id="phoneError">يجب أن يبدأ الرقم بـ 05 ويتكون من 10 أرقام</div>
-            </div>
-            
-            <div class="price-display">
-                <div class="price-label">السعر الإجمالي</div>
-                <div class="price-value">
-                    <span class="price-currency">ر.س</span>
-                    <span id="totalPrice">0</span>
-                </div>
-            </div>
-            
-            <button type="submit" class="btn btn-primary" id="submitBtn" disabled>
-                تأكيد الحجز
-            </button>
-        </form>
-    </div>
 
-    <script>
-        mapboxgl.accessToken = 'pk.eyJ1IjoibjktN3Z2IiwiYSI6ImNtbTJubnJjMDA4OGEycXNnaXN2M21lZ3QifQ.yZPWMAgrnQxnwZZdr8kwjA';
-        
-        const riyadhBounds = [
-            [46.4, 24.4],
-            [47.0, 25.1]
-        ];
-        
-        const map = new mapboxgl.Map({
-            container: 'map',
-            style: 'mapbox://styles/mapbox/dark-v11',
-            center: [46.67, 24.75],
-            zoom: 11,
-            minZoom: 9,
-            maxZoom: 16,
-            maxBounds: riyadhBounds
-        });
-        
-        map.addControl(new mapboxgl.NavigationControl(), 'top-right');
-        
-        const screens = [
-            {
-                id: 'screen1',
-                name: 'شاشة الملك فهد',
-                coordinates: [46.675, 24.713],
-                color: '#00FFC2',
-                description: 'شاشة عملاقة في قلب طريق الملك فهد'
-            },
-            {
-                id: 'screen2',
-                name: 'شاشة العليا',
-                coordinates: [46.690, 24.690],
-                color: '#FF00F5',
-                description: 'موقع استراتيجي في حي العليا'
-            },
-            {
-                id: 'screen3',
-                name: 'شاشة النخيل',
-                coordinates: [46.724, 24.774],
-                color: '#FFD700',
-                description: 'تغطية ممتازة لمنطقة النخيل'
-            }
-        ];
-        
-        let selectedLocation = null;
-        let selectedScreen = null;
-        let basePrice = 0;
-        
-        map.on('load', () => {
-            screens.forEach((screen, index) => {
-                const source = {
-                    'type': 'geojson',
-                    'data': {
-                        'type': 'FeatureCollection',
-                        'features': [{
-                            'type': 'Feature',
-                            'geometry': {
-                                'type': 'Point',
-                                'coordinates': screen.coordinates
-                            }
-                        }]
-                    }
-                };
-                
-                map.addSource(screen-${screen.id}, source);
-                
-                const circle = turf.circle(screen.coordinates, 8, { units: 'kilometers' });
-                
-                map.addSource(circle-${screen.id}, {
-                    'type': 'geojson',
-                    'data': circle
-                });
-                
-                map.addLayer({
-                    'id': circle-fill-${screen.id},
-                    'type': 'fill',
-                    'source': circle-${screen.id},
-                    'paint': {
-                        'fill-color': screen.color,
-                        'fill-opacity': 0.15
-                    }
-                });
-                
-                map.addLayer({
-                    'id': circle-outline-${screen.id},
-                    'type': 'line',
-                    'source': circle-${screen.id},
-                    'paint': {
-                        'line-color': screen.color,
-                        'line-width': 2,
-                        'line-opacity': 0.5
-                    }
-                });
-                
-                const el = document.createElement('div');
-                el.className = 'screen-marker';
-                el.style.background = screen.color;
-                el.style.boxShadow = 0 0 20px ${screen.color};
-                el.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>';
-                
-                const marker = new mapboxgl.Marker(el)
-                    .setLngLat(screen.coordinates)
-                    .setPopup(new mapboxgl.Popup({ offset: 25 })
-                        .setHTML(
-                            <div class="popup-content">
-                                <div class="popup-title">${screen.name}</div>
-                                <div class="popup-info">${screen.description}</div>
-                            </div>
-                        ))
-                    .addTo(map);
-            });
-        });
-        
-        map.on('click', (e) => {
-            const clickedPoint = [e.lngLat.lng, e.lngLat.lat];
-            selectedLocation = clickedPoint;
-            
-            let nearestScreen = null;
-            let minDistance = Infinity;
-            
-            screens.forEach(screen => {
-                const distance = turf.distance(clickedPoint, screen.coordinates, { units: 'kilometers' });
-                if (distance < minDistance) {
-                    minDistance = distance;
-                    nearestScreen = screen;
-                }
-            });
-            
-            screens.forEach(screen => {
-                map.setPaintProperty(circle-fill-${screen.id}, 'fill-opacity', 0.15);
-            });
-            
-            if (minDistance <= 8) {
-                selectedScreen = nearestScreen;
-                map.setPaintProperty(circle-fill-${nearestScreen.id}, 'fill-opacity', 0.35);
-                
-                const estimatedTime = Math.round(minDistance  3 + Math.random()  5 + 5);
-                
-                document.getElementById('statusCard').classList.remove('danger');
-                document.getElementById('statusCard').classList.add('success');
-                document.getElementById('statusDot').className = 'status-dot active';
-                document.getElementById('statusText').textContent = 'موقع داخل نطاق التغطية';
-                document.getElementById('locationInfo').style.display = 'block';
-                document.getElementById('screenName').textContent = nearestScreen.name;
-                document.getElementById('distance').textContent = ${minDistance.toFixed(2)} كم;
-                document.getElementById('arrivalTime').textContent = ${estimatedTime} دقيقة;
-                
-                if (minDistance <= 2) {
-                    basePrice = 4000;
-                } else if (minDistance <= 5) {
-                    basePrice = 3000;
-                } else {
-                    basePrice = 2000;
-                }
-                
-                updatePrice();
-                checkFormValidity();
-                
-                if (!document.getElementById('sidePanel').classList.contains('active')) {
-                    togglePanel();
-                }
-            } else {
-                selectedScreen = null;
-                document.getElementById('statusCard').classList.remove('success');
-                document.getElementById('statusCard').classList.add('danger');
-                document.getElementById('statusDot').className = 'status-dot inactive';
-                document.getElementById('statusText').textContent = 'موقع خارج نطاق التغطية';
-                document.getElementById('locationInfo').style.display = 'none';
-                basePrice = 0;
-                updatePrice();
-                checkFormValidity();
-            }
-        });
-        
-        function togglePanel() {
-            document.getElementById('sidePanel').classList.toggle('active');
-        }
-        
-        function updatePrice() {
-            if (basePrice === 0) {
-                document.getElementById('totalPrice').textContent = '0';
-                return;
-            }
-            
-            const screenCount = parseInt(document.getElementById('screenCount').value);
-            const needDesign = document.getElementById('needDesign').checked;
-            
-            let total = basePrice * screenCount;
-            if (needDesign) {
-                total += 800;
-            }
-            
-            document.getElementById('totalPrice').textContent = total.toLocaleString();
-        }
-        
-        function updateEndDate() {
-            const startDate = document.getElementById('startDate').value;
-            if (startDate) {
-                const start = new Date(startDate);
-                const now = new Date();
-                
-                if (start < now) {
-                    document.getElementById('startDate').value = '';
-                    alert('لا يمكن اختيار تاريخ ماضي');
-                }
-            }
-            checkFormValidity();
-        }
-        
-        document.getElementById('startDate').min = new Date().toISOString().slice(0, 16);
-        
-        document.getElementById('phoneNumber').addEventListener('input', function() {
-            const value = this.value;
-            const phoneError = document.getElementById('phoneError');
-            
-            if (value.length > 0) {
-                if (!value.startsWith('05') || value.length !== 10 || !/^\d+$/.test(value)) {
-                    this.classList.add('error');
-                    phoneError.classList.add('show');
-                } else {
-                    this.classList.remove('error');
-                    phoneError.classList.remove('show');
-                }
-            } else {
-                this.classList.remove('error');
-                phoneError.classList.remove('show');
-            }
-            
-            checkFormValidity();
-        });
-        
-        function checkFormValidity() {
-            const companyName = document.getElementById('companyName').value;
-            const companyType = document.getElementById('companyType').value;
-            const startDate = document.getElementById('startDate').value;
-            const phoneNumber = document.getElementById('phoneNumber').value;
-            const phoneValid = phoneNumber.startsWith('05') && phoneNumber.length === 10 && /^\d+$/.test(phoneNumber);
-            
-            const isValid = selectedScreen && companyName && companyType && startDate && phoneValid;
-            
-            document.getElementById('submitBtn').disabled = !isValid;
-        }
-        
-        document.querySelectorAll('.form-control').forEach(input => {
-            input.addEventListener('input', checkFormValidity);
-            input.addEventListener('change', checkFormValidity);
-        });
-        
-        document.getElementById('bookingForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const formData = {
-                companyName: document.getElementById('companyName').value,
-                companyType: document.getElementById('companyType').value,
-                screenCount: document.getElementById('screenCount').value,
-                startDate: document.getElementById('startDate').value,
-                needDesign: document.getElementById('needDesign').checked,
-                phoneNumber: document.getElementById('phoneNumber').value,
-                selectedScreen: selectedScreen.name,
-                totalPrice: document.getElementById('totalPrice').textContent
-            };
-            
-            alert(تم استلام طلب الحجز بنجاح!\n\nتفاصيل الحجز:\nالمنشأة: ${formData.companyName}\nالشاشة: ${formData.selectedScreen}\nالسعر: ${formData.totalPrice} ريال\n\nسيتم التواصل معك قريباً على الرقم ${formData.phoneNumber});
-            
-            this.reset();
-            document.getElementById('totalPrice').textContent = '0';
-            checkFormValidity();
-        });
-    </script>
+<body>
+
+<div id="map"></div>
+
+<div class="panel-toggle">☰</div>
+
+<div class="panel" id="panel">
+  <h2>حجز شاشة - Wadheex X</h2>
+
+  <div id="statusBox" class="status no">لم يتم اختيار موقع</div>
+
+  <div class="label">اسم المنشأة</div>
+  <input id="orgName" type="text" placeholder="مثال: مطعم الواحة">
+
+  <div class="label">نوع المنشأة</div>
+  <select id="orgType">
+    <option value="">اختر النوع</option>
+    <option>مطعم</option>
+    <option>مقهى</option>
+    <option>متجر</option>
+    <option>شركة</option>
+    <option>مؤسسة</option>
+  </select>
+
+  <div class="label">عدد الشاشات</div>
+  <input id="screenCount" type="number" min="1" value="1">
+
+  <div class="label">تاريخ ووقت البداية</div>
+  <input id="startDate" type="datetime-local">
+
+  <div class="label">هل تحتاج تصميم إعلان؟</div>
+  <select id="needDesign">
+    <option value="no">لا</option>
+    <option value="yes">نعم (+800 ريال)</option>
+  </select>
+
+  <div class="label">رقم التواصل</div>
+  <input id="phone" type="text" placeholder="05xxxxxxxx">
+
+  <div class="price-box" id="priceBox">السعر: 0 ريال</div>
+
+  <button id="bookBtn" disabled>إتمام الحجز</button>
+</div>
+
+<script>
+/* إعداد الخريطة */
+mapboxgl.accessToken = "pk.eyJ1IjoibjktN3Z2IiwiYSI6ImNtbTJubnJjMDA4OGEycXNnaXN2M21lZ3QifQ.yZPWMAgrnQxnwZZdr8kwjA";
+
+const map = new mapboxgl.Map({
+  container:"map",
+  style:"mapbox://styles/mapbox/dark-v11",
+  center:[46.67,24.75],
+  zoom:11,
+  minZoom:9,
+  maxZoom:16,
+  maxBounds:[[46.3,24.4],[47.1,25.1]]
+});
+
+map.addControl(new mapboxgl.NavigationControl());
+
+/* الشاشات */
+const screens = [
+  {
+    name:"شاشة العليا",
+    coords:[46.675,24.713],
+    color:"#ff4444"
+  },
+  {
+    name:"شاشة النخيل",
+    coords:[46.72,24.77],
+    color:"#44ff44"
+  },
+  {
+    name:"شاشة الملز",
+    coords:[46.71,24.65],
+    color:"#4488ff"
+  }
+];
+
+let circles = {};
+let selectedScreen = null;
+
+/* رسم الشاشات */
+screens.forEach((s,i)=>{
+  const el = document.createElement("div");
+  el.className="marker";
+  el.style.background=s.color;
+  el.style.boxShadow=`0 0 12px 4px ${s.color}`;
+
+  el.addEventListener("mouseenter",()=>{});
+  el.addEventListener("click",()=>{
+    selectScreen(s);
+  });
+
+  new mapboxgl.Marker(el)
+    .setLngLat(s.coords)
+    .setPopup(new mapboxgl.Popup().setHTML(`<h3>${s.name}</h3><p>شاشة إعلانية ذكية</p>`))
+    .addTo(map);
+
+  const circle = turf.circle(s.coords,8,{steps:80,units:"kilometers"});
+  circles[s.name]=circle;
+});
+
+map.on("load",()=>{
+  Object.keys(circles).forEach((key,i)=>{
+    map.addSource("circle-"+i,{
+      type:"geojson",
+      data:circles[key]
+    });
+    map.addLayer({
+      id:"circle-"+i,
+      type:"fill",
+      source:"circle-"+i,
+      paint:{
+        "fill-color":"#ffffff",
+        "fill-opacity":0.15
+      }
+    });
+  });
+});
+
+/* عند الضغط على الخريطة */
+map.on("click",(e)=>{
+  const pt = [e.lngLat.lng,e.lngLat.lat];
+
+  let nearest = null;
+  let minDist = Infinity;
+
+  screens.forEach(s=>{
+    const d = turf.distance(pt,s.coords,{units:"kilometers"});
+    if(d < minDist){
+      minDist = d;
+      nearest = s;
+    }
+  });
+
+  if(minDist <= 8){
+    selectScreen(nearest,minDist);
+  }else{
+    selectedScreen = null;
+    updateStatus(false);
+    resetCircles();
+    document.getElementById("bookBtn").disabled=true;
+  }
+});
+
+/* اختيار شاشة */
+function selectScreen(screen,dist=null){
+  selectedScreen = screen;
+  highlightCircle(screen.name);
+
+  const distance = dist ? dist.toFixed(2) : turf.distance(map.getCenter(),screen.coords,{units:"kilometers"}).toFixed(2);
+  const time = Math.round(distance * 4 + 3);
+
+  updateStatus(true,screen.name,distance,time);
+  document.getElementById("bookBtn").disabled=false;
+
+  updatePrice();
+}
+
+/* تحديث الحالة */
+function updateStatus(ok,name="",dist="",time=""){
+  const box = document.getElementById("statusBox");
+  if(ok){
+    box.className="status ok";
+    box.innerHTML=`${name}<br>المسافة: ${dist} كم<br>الوقت المتوقع: ${time} دقيقة`;
+  }else{
+    box.className="status no";
+    box.innerHTML="خارج نطاق الشاشات";
+  }
+}
+
+/* تمييز الدائرة */
+function highlightCircle(name){
+  resetCircles();
+  Object.keys(circles).forEach((key,i)=>{
+    if(key===name){
+      map.setPaintProperty("circle-"+i,"fill-opacity",0.35);
+    }
+  });
+}
+
+/* إعادة الدوائر */
+function resetCircles(){
+  Object.keys(circles).forEach((key,i)=>{
+    map.setPaintProperty("circle-"+i,"fill-opacity",0.15);
+  });
+}
+
+/* التحقق من رقم الجوال */
+document.getElementById("phone").addEventListener("input",()=>{
+  const v = document.getElementById("phone").value;
+  if(/^05\d{8}$/.test(v)){
+    document.getElementById("phone").style.border="2px solid #4caf50";
+  }else{
+    document.getElementById("phone").style.border="2px solid #b71c1c";
+  }
+});
+
+/* منع التاريخ الماضي */
+document.getElementById("startDate").setAttribute("min",new Date().toISOString().slice(0,16));
+
+/* حساب السعر */
+function updatePrice(){
+  if(!selectedScreen) return;
+
+  const count = parseInt(document.getElementById("screenCount").value||1);
+  const needDesign = document.getElementById("needDesign").value==="yes";
+
+  const dist = turf.distance(map.getCenter(),selectedScreen.coords,{units:"kilometers"});
+
+  let base = 2000;
+  if(dist <=2) base=4000;
+  else if(dist <=5) base=3000;
+
+  let total = base * count;
+  if(needDesign) total += 800;
+
+  document.getElementById("priceBox").innerHTML=`السعر: ${total} ريال`;
+}
+
+document.querySelectorAll("#screenCount,#needDesign").forEach(el=>{
+  el.addEventListener("input",updatePrice);
+});
+
+/* فتح/إغلاق اللوحة */
+document.querySelector(".panel-toggle").onclick=()=>{
+  document.getElementById("panel").classList.toggle("open");
+};
+</script>
+
 </body>
 </html>
-``
