@@ -9,7 +9,14 @@
   <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
 
-  <style>
+  /* حركة إخفاء اللوحة */
+#sidePanel {
+  transition: transform 0.35s ease;
+}
+
+#sidePanel.is-hidden {
+  transform: translateX(110%);
+}<style>
     :root{
       --bg:#0b0f17;
       --panel:#0f1624;
@@ -141,13 +148,13 @@
 <body>
 <div id="app">
   <div id="map"></div>
-
+<button id="panelToggle">☰</button>
   <div class="topbar">
     <div class="pill"><b>Wadheex Ads — منصة وميض</b><br>اضغط على الخريطة أو ابحث بالعنوان. النظام يقول لك إذا داخل نطاق أقرب شاشة خلال 10 دقائق أو خارج النطاق.</div>
     <div class="pill" id="debugPill">🟡 جاري التحميل…</div>
   </div>
 
-  <aside class="panel">
+  <aside id="sidePanel" class="panel">
     <header>
       <div class="title">
         <div>منصة الحجز الذاتي — Wadheex Ads</div>
@@ -213,6 +220,20 @@
 </div>
 
 <script>
+
+  // أكوادك الحالية فوق هنا
+
+  // 👇👇 هنا نحط كود زر الإخفاء
+
+ const sidePanel = document.getElementById("sidePanel");
+const panelToggle = document.getElementById("panelToggle");
+
+if (panelToggle && sidePanel) {
+  panelToggle.addEventListener("click", () => {
+    sidePanel.classList.toggle("is-hidden");
+  });
+}
+</script>
 /* ==============================
    0) إعداداتك (لا تغيّر إلا لو تبغى)
 ================================ */
