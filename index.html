@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>WAMMED X — منصة الحجز الذكية</title>
+<title>WAMMED X — Premium Edition</title>
 
 <!-- Mapbox -->
 <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
@@ -17,14 +17,23 @@
 <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
 
 <style>
+/* خلفية عامة */
 html, body {
   margin: 0;
   padding: 0;
   height: 100%;
-  background: #0B1E33;
+  background: radial-gradient(circle at top, #0f1c2e, #07101c 60%);
   font-family: "Inter", "Cairo", sans-serif;
   color: #F2F6FA;
   overflow: hidden;
+}
+
+/* تأثير زجاجي */
+.glass {
+  backdrop-filter: blur(18px);
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 4px 30px rgba(0,0,0,0.4);
 }
 
 /* الشريط العلوي */
@@ -33,67 +42,78 @@ html, body {
   top: 0;
   right: 0;
   left: 0;
-  height: 64px;
-  background: #0B1E33;
-  border-bottom: 1px solid #123A63;
+  height: 70px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 20px;
+  padding: 0 26px;
   z-index: 1000;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  background: rgba(10,20,35,0.65);
+  backdrop-filter: blur(14px);
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .logo-icon {
-  width: 34px;
-  height: 34px;
-  background: #4DA3FF;
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #4DA3FF, #1E5A8A);
   color: #0B1E33;
   font-weight: 900;
   font-size: 22px;
-  border-radius: 6px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 0 12px rgba(77,163,255,0.5);
 }
 
 .logo-text {
-  font-size: 20px;
-  font-weight: 700;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 1px;
 }
 
 .logo-text .x {
   color: #4DA3FF;
+  text-shadow: 0 0 8px #4DA3FF;
 }
 
+/* أزرار الشريط */
 .top-actions {
   display: flex;
-  gap: 10px;
+  gap: 12px;
 }
 
 .top-btn {
-  background: #123A63;
+  padding: 8px 16px;
+  border-radius: 8px;
   border: none;
-  padding: 7px 14px;
-  border-radius: 6px;
-  color: #F2F6FA;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 14px;
+  background: rgba(255,255,255,0.08);
+  color: #F2F6FA;
+  transition: 0.2s;
+}
+
+.top-btn:hover {
+  background: rgba(255,255,255,0.15);
 }
 
 .top-btn.highlight {
-  background: #1E5A8A;
+  background: linear-gradient(135deg, #1E5A8A, #4DA3FF);
+  box-shadow: 0 0 10px rgba(77,163,255,0.5);
 }
 
 /* الخريطة */
 #map {
   position: absolute;
-  top: 64px;
+  top: 70px;
   bottom: 0;
   right: 0;
   left: 0;
@@ -102,30 +122,32 @@ html, body {
 /* زر فتح اللوحة */
 .open-sidebar {
   position: fixed;
-  top: 80px;
+  top: 90px;
   right: 20px;
-  background: #1E5A8A;
+  background: linear-gradient(135deg, #1E5A8A, #4DA3FF);
   color: #F2F6FA;
   border: none;
-  padding: 10px 18px;
-  border-radius: 6px;
+  padding: 12px 20px;
+  border-radius: 10px;
   cursor: pointer;
   z-index: 900;
+  box-shadow: 0 0 12px rgba(77,163,255,0.4);
 }
 
 /* اللوحة الجانبية */
 .sidebar {
   position: fixed;
-  top: 64px;
-  right: -380px;
-  width: 360px;
-  height: calc(100% - 64px);
-  background: #0F2744;
-  border-left: 1px solid #123A63;
-  padding: 20px;
+  top: 70px;
+  right: -420px;
+  width: 380px;
+  height: calc(100% - 70px);
+  padding: 22px;
   overflow-y: auto;
   transition: 0.35s;
   z-index: 999;
+  border-left: 1px solid rgba(255,255,255,0.08);
+  background: rgba(10,20,35,0.55);
+  backdrop-filter: blur(18px);
 }
 
 .sidebar.open {
@@ -136,37 +158,35 @@ html, body {
   background: none;
   border: none;
   color: #4DA3FF;
-  font-size: 26px;
+  font-size: 30px;
   cursor: pointer;
   float: left;
 }
 
 /* البطاقات */
 .card {
-  background: #123A63;
-  padding: 16px;
-  border-radius: 10px;
-  margin-bottom: 18px;
+  padding: 18px;
+  border-radius: 14px;
+  margin-bottom: 20px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
 }
 
 .card-title {
-  margin: 0 0 12px 0;
-  font-size: 17px;
+  margin: 0 0 14px 0;
+  font-size: 18px;
   font-weight: 700;
 }
 
 /* الحقول */
-label {
-  font-size: 13px;
-}
-
 input, select {
   width: 100%;
-  padding: 10px;
-  margin: 6px 0 14px 0;
-  border-radius: 6px;
-  border: 1px solid #1E5A8A;
-  background: #0B1E33;
+  padding: 12px;
+  margin: 6px 0 16px 0;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.05);
   color: #F2F6FA;
   font-size: 14px;
 }
@@ -174,14 +194,15 @@ input, select {
 /* الأزرار */
 .primary-btn {
   width: 100%;
-  padding: 12px;
-  background: #1E5A8A;
+  padding: 14px;
+  background: linear-gradient(135deg, #1E5A8A, #4DA3FF);
   border: none;
-  border-radius: 6px;
+  border-radius: 10px;
   color: #F2F6FA;
   font-size: 16px;
   cursor: pointer;
   margin-top: 10px;
+  box-shadow: 0 0 12px rgba(77,163,255,0.4);
 }
 
 .primary-btn:disabled {
@@ -191,58 +212,41 @@ input, select {
 
 .secondary-btn {
   width: 100%;
-  padding: 10px;
-  background: #123A63;
+  padding: 12px;
+  background: rgba(255,255,255,0.08);
   border: none;
-  border-radius: 6px;
+  border-radius: 10px;
   color: #F2F6FA;
   cursor: pointer;
   margin-bottom: 10px;
 }
 
 .secondary-btn.danger {
-  background: #8A1E1E;
+  background: rgba(255,0,0,0.25);
 }
 
 /* السعر */
 .price-box {
-  background: #0B1E33;
-  padding: 12px;
-  border-radius: 6px;
-  border: 1px solid #1E5A8A;
+  background: rgba(255,255,255,0.05);
+  padding: 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.1);
   margin-top: 10px;
   text-align: center;
-  font-size: 16px;
+  font-size: 17px;
 }
 
-/* النطاق */
-.range-info {
-  margin-top: 10px;
-  font-size: 14px;
-  color: #8FA3B8;
-}
-
-/* التبديل */
-.toggle {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-/* Geocoder */
-.mapboxgl-ctrl-geocoder {
-  width: 100%;
-}
-
-/* Popup ماب بوكس */
+/* Popup */
 .mapboxgl-popup-content {
-  background: #123A63;
+  background: rgba(10,20,35,0.85);
   color: #F2F6FA;
-  border-radius: 8px;
-  font-family: "Inter","Cairo",sans-serif;
+  border-radius: 12px;
+  padding: 14px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.1);
 }
 .mapboxgl-popup-tip {
-  border-top-color: #123A63 !important;
+  border-top-color: rgba(10,20,35,0.85) !important;
 }
 </style>
 </head>
@@ -264,27 +268,27 @@ input, select {
 
 <button id="openSidebar" class="open-sidebar">القائمة</button>
 
-<aside id="sidebar" class="sidebar">
+<aside id="sidebar" class="sidebar glass">
   <button id="closeSidebar" class="close-sidebar">×</button>
 
   <!-- البحث -->
-  <section class="card">
+  <section class="card glass">
     <h3 class="card-title">بحث عن موقع</h3>
     <div id="geocoder"></div>
   </section>
 
   <!-- تفاصيل الشاشة -->
-  <section class="card" id="screenDetails" style="display:none">
+  <section class="card glass" id="screenDetails" style="display:none">
     <h3 class="card-title">الشاشة المختارة</h3>
     <div id="screenInfo"></div>
   </section>
 
   <!-- الحجز -->
-  <section class="card" id="bookingSection" style="display:none">
+  <section class="card glass" id="bookingSection" style="display:none">
     <h3 class="card-title">إتمام الحجز</h3>
 
     <label>اسم المنشأة</label>
-    <input id="orgName" type="text" placeholder="مثال: مطعم الواحة">
+    <input id="orgName" type="text">
 
     <label>نوع المنشأة</label>
     <select id="orgType">
@@ -312,7 +316,7 @@ input, select {
     </select>
 
     <label>رقم التواصل</label>
-    <input id="phone" type="text" placeholder="05xxxxxxxx">
+    <input id="phone" type="text">
 
     <div class="price-box" id="priceBox">السعر: 0 ريال</div>
 
@@ -320,7 +324,7 @@ input, select {
   </section>
 
   <!-- النطاق -->
-  <section class="card">
+  <section class="card glass">
     <h3 class="card-title">النطاق</h3>
     <button id="rangeBtn" class="secondary-btn">تحديد نطاق</button>
     <button id="clearRange" class="secondary-btn danger">مسح النطاق</button>
@@ -328,7 +332,7 @@ input, select {
   </section>
 
   <!-- الخريطة الحرارية -->
-  <section class="card">
+  <section class="card glass">
     <h3 class="card-title">الخريطة الحرارية</h3>
     <label class="toggle">
       <input type="checkbox" id="toggleHeat">
@@ -345,7 +349,7 @@ mapboxgl.accessToken = "pk.eyJ1IjoibjktN3Z2IiwiYSI6ImNtbTJubnJjMDA4OGEycXNnaXN2M
 const map = new mapboxgl.Map({
   container: "map",
   style: "mapbox://styles/mapbox/dark-v11",
-  center: [46.6753, 24.7136], // الرياض
+  center: [46.6753, 24.7136],
   zoom: 11
 });
 
@@ -393,7 +397,7 @@ const screens = [
 
 // عرض الشاشات على الخريطة
 screens.forEach(screen => {
-  const marker = new mapboxgl.Marker({ color: "#1E5A8A" })
+  const marker = new mapboxgl.Marker({ color: "#4DA3FF" })
     .setLngLat(screen.coords)
     .addTo(map);
 
@@ -414,17 +418,13 @@ screens.forEach(screen => {
     </div>
   `;
 
-  const popup = new mapboxgl.Popup({ offset: 25 })
-    .setHTML(popupHtml);
-
+  const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(popupHtml);
   marker.setPopup(popup);
 
   marker.getElement().addEventListener("click", () => {
     setTimeout(() => {
       const btn = document.getElementById(`select-${screen.id}`);
-      if (btn) {
-        btn.onclick = () => selectScreen(screen);
-      }
+      if (btn) btn.onclick = () => selectScreen(screen);
     }, 50);
   });
 });
@@ -461,11 +461,10 @@ function updatePrice() {
 document.getElementById("screenCount").oninput = updatePrice;
 document.getElementById("needDesign").onchange = updatePrice;
 
-// إتمام الحجز (تجريبي)
+// إتمام الحجز
 bookBtn.onclick = () => {
   if (!selectedScreen) return;
-  const orgName = document.getElementById("orgName").value || "منشأة بدون اسم";
-  alert("تم إرسال طلب الحجز بنجاح على شاشة: " + selectedScreen.name + "\nللمنشأة: " + orgName);
+  alert("تم إرسال طلب الحجز بنجاح على شاشة: " + selectedScreen.name);
 };
 
 // النطاق
@@ -497,20 +496,4 @@ document.getElementById("rangeBtn").onclick = () => {
   });
 };
 
-document.getElementById("clearRange").onclick = () => {
-  if (map.getLayer("rangeCircle")) map.removeLayer("rangeCircle");
-  if (map.getSource("rangeCircle")) map.removeSource("rangeCircle");
-  document.getElementById("rangeInfo").innerHTML = "لم يتم تحديد نطاق بعد";
-};
-
-// الخريطة الحرارية (تجريبي)
-document.getElementById("toggleHeat").onchange = function () {
-  if (this.checked) {
-    alert("تم تفعيل الخريطة الحرارية (تجريبي)");
-  } else {
-    alert("تم إيقاف الخريطة الحرارية");
-  }
-};
-</script>
-</body>
-</html>
+document.getElementById("clearRange").onclick = () =>
