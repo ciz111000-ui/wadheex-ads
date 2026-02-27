@@ -1,128 +1,195 @@
-<!DOCTYPE html>
-<html lang="ar">
+<!doctype html>
+<html lang="ar" dir="rtl">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Wadheex X</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Wadheex X – Pro</title>
 
-<link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
+<link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet"/>
 <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
 
 <style>
-body,html{
-  margin:0;
-  height:100%;
-  font-family:system-ui;
-  background:#0b0f18;
+:root{
+  --bg:#0b0b12;
+  --panel:#12121b;
+  --purple:#8a2be2;
+  --purple2:#b26cff;
+  --glow:0 0 25px rgba(138,43,226,.45);
 }
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto}
+a{color:inherit;text-decoration:none}
 
-#map{
-  position:absolute;
-  top:0;
-  bottom:0;
+/* ===== Hero ===== */
+.hero{
+  min-height:100vh;
+  display:grid;
+  grid-template-columns:1.1fr .9fr;
+  align-items:center;
+  padding:40px 6vw;
+  background:
+    radial-gradient(800px 400px at 80% 20%, rgba(138,43,226,.25), transparent 60%),
+    linear-gradient(135deg,#0b0b12,#141422 60%,#0f0f18);
+  position:relative;
+  overflow:hidden;
+}
+.hero h1{
+  font-size:clamp(28px,4vw,48px);
+  line-height:1.2;
+  margin:0 0 16px;
+}
+.hero p{opacity:.8;margin:0 0 24px}
+.cta{
+  display:inline-block;
+  padding:14px 22px;
+  border-radius:10px;
+  background:linear-gradient(90deg,var(--purple),var(--purple2));
+  box-shadow:var(--glow);
+  transition:.3s;
+}
+.cta:hover{transform:translateY(-2px)}
+
+/* 3D screen */
+.screen-3d{
   width:100%;
+  max-width:420px;
+  aspect-ratio:9/16;
+  margin-inline:auto;
+  background:#000;
+  border-radius:22px;
+  padding:12px;
+  box-shadow:0 40px 80px rgba(0,0,0,.6), var(--glow);
+  transform:perspective(1200px) rotateY(-12deg) rotateX(6deg);
+  transition:.5s;
 }
+.screen-3d:hover{transform:perspective(1200px) rotateY(-6deg) rotateX(3deg)}
+.screen-inner{
+  height:100%;
+  border-radius:16px;
+  background:
+    linear-gradient(135deg,rgba(138,43,226,.25),rgba(0,0,0,.9)),
+    radial-gradient(circle at 30% 20%, rgba(178,108,255,.4), transparent 60%);
+  display:flex;align-items:center;justify-content:center;
+  text-align:center;padding:20px;
+}
+.screen-inner span{font-weight:600;opacity:.9}
 
+/* ===== Map Section ===== */
+.section-map{min-height:100vh;position:relative}
+#map{position:absolute;inset:0}
+
+/* Panel (LED) */
 .panel{
   position:absolute;
-  right:20px;
-  top:20px;
-  width:360px;
-  max-width:95%;
-  backdrop-filter:blur(20px);
-  background:rgba(20,25,40,0.75);
+  top:50%;left:20px;
+  transform:translateY(-50%);
+  width:340px;
+  max-width:90vw;
+  background:var(--panel);
   border-radius:20px;
-  padding:20px;
-  color:#fff;
-  box-shadow:0 10px 40px rgba(0,0,0,.5);
+  padding:18px;
+  box-shadow:0 25px 60px rgba(0,0,0,.7), var(--glow);
+  transition:.4s;
+}
+.panel.closed{transform:translate(-110%, -50%)}
+.panel h3{margin:0 0 10px;font-size:18px}
+.panel small{opacity:.6}
+.panel input, .panel select{
+  width:100%;padding:10px;margin:8px 0;
+  border-radius:8px;border:1px solid #222;background:#0f0f16;color:#fff
+}
+.panel button{
+  width:100%;padding:12px;margin-top:10px;
+  border:none;border-radius:8px;
+  background:linear-gradient(90deg,var(--purple),var(--purple2));
+  color:#fff;cursor:pointer
+}
+.toggle-btn{
+  position:absolute;top:50%;left:0;
+  transform:translate(-100%,-50%);
+  background:var(--purple);
+  padding:10px 12px;border-radius:8px 0 0 8px;
+  cursor:pointer
 }
 
-.panel h2{
-  margin:0 0 10px;
-  font-size:20px;
+/* Info badge */
+.info{
+  position:absolute;right:20px;bottom:20px;
+  background:rgba(0,0,0,.6);
+  padding:12px 16px;border-radius:12px;
+  backdrop-filter:blur(8px);
 }
 
-.input{
-  width:100%;
-  padding:12px;
-  border-radius:12px;
-  border:none;
-  margin:8px 0;
-  font-size:14px;
-}
-
-.stat{
-  background:rgba(255,255,255,0.05);
-  padding:10px;
-  border-radius:10px;
-  margin-top:6px;
-  font-size:14px;
-}
-
-.btn{
-  width:100%;
-  padding:12px;
-  border:none;
-  border-radius:14px;
-  margin-top:10px;
-  cursor:pointer;
-  font-weight:bold;
-}
-
-.btn-primary{
-  background:#ff3b3b;
-  color:#fff;
-}
-
-.preview{
-  height:100px;
-  background:#000;
-  margin-top:10px;
-  border-radius:12px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:bold;
-}
-
-@media(max-width:768px){
-  .panel{
-    bottom:0;
-    top:auto;
-    width:100%;
-    border-radius:20px 20px 0 0;
-  }
+/* Responsive */
+@media(max-width:900px){
+  .hero{grid-template-columns:1fr;gap:40px;text-align:center}
+  .screen-3d{transform:none}
+  .panel{left:50%;transform:translate(-50%,-50%)}
+  .panel.closed{transform:translate(-50%,-200%)}
+  .toggle-btn{left:50%;transform:translate(-50%,-100%)}
 }
 </style>
 </head>
+
 <body>
 
-<div id="map"></div>
+<!-- ===== Hero ===== -->
+<section class="hero">
+  <div>
+    <h1>احجز إعلانك داخل نطاق 10 دقائق</h1>
+    <p>منصة وميض X – اختيار أقرب شاشة، تسعير ذكي، إشعار فوري.</p>
+    <a href="#mapSection" class="cta">ابدأ الحجز الآن</a>
+  </div>
 
-<div class="panel">
-<h2>Wadheex X</h2>
+  <div class="screen-3d">
+    <div class="screen-inner">
+      <span>WADHEEX LED NETWORK<br/>North Riyadh</span>
+    </div>
+  </div>
+</section>
 
-<input id="business" class="input" placeholder="اسم المنشأة" />
+<!-- ===== Map ===== -->
+<section class="section-map" id="mapSection">
+  <div id="map"></div>
 
-<div id="distance" class="stat">المسافة: -</div>
-<div id="price" class="stat">السعر: -</div>
-<div id="eta" class="stat">وقت الوصول: -</div>
+  <div class="panel closed" id="panel">
+    <div class="toggle-btn" onclick="togglePanel()">☰</div>
+    <h3>طلب إعلان أسبوع</h3>
+    <small id="screenName">لم يتم اختيار موقع</small>
 
-<button class="btn btn-primary" onclick="submitOrder()">حجز عبر واتساب</button>
+    <input id="name" placeholder="اسم المنشأة"/>
+    <input id="startDate" type="date"/>
+    <select id="timeSlot">
+      <option value="صباحي">صباحي</option>
+      <option value="مسائي">مسائي</option>
+      <option value="طوال اليوم">طوال اليوم</option>
+    </select>
 
-<div class="preview" id="previewBox">إعلانك هنا</div>
-</div>
+    <div id="priceBox">السعر: -</div>
+    <button onclick="submitAd()">تأكيد وإرسال</button>
+  </div>
+
+  <div class="info" id="infoBox">اختر موقع على الخريطة</div>
+</section>
 
 <script>
+// ====== CONFIG ======
 mapboxgl.accessToken = "pk.eyJ1IjoibjktN3Z2IiwiYSI6ImNtbTJubnJjMDA4OGEycXNnaXN2M21lZ3QifQ.yZPWMAgrnQxnwZZdr8kwjA";
+const TELEGRAM_BOT_TOKEN = "7991701749:AAE57vt1JB4gB4lLwRsRXfTEmvuFBMEjqcI";
+const TELEGRAM_CHAT_ID = "735805031";
 
+// ====== SCREENS ======
 const screens = [
-  {name:"Screen-1", coords:[46.61106,24.77635]},
-  {name:"Screen-2", coords:[46.65000,24.80000]},
-  {name:"Screen-3", coords:[46.70000,24.75000]}
+  {id:1,name:"Screen A - النخيل",coords:[46.67,24.74]},
+  {id:2,name:"Screen B - الملقا",coords:[46.63,24.79]},
+  {id:3,name:"Screen C - الياسمين",coords:[46.70,24.78]}
 ];
 
+let selectedScreen=null;
+let selectedPoint=null;
+
+// ====== MAP ======
 const map = new mapboxgl.Map({
   container:"map",
   style:"mapbox://styles/mapbox/dark-v11",
@@ -130,70 +197,89 @@ const map = new mapboxgl.Map({
   zoom:11
 });
 
-map.addControl(new mapboxgl.NavigationControl());
-
-let userMarker=null;
-let selectedScreen=null;
-
 screens.forEach(s=>{
-  new mapboxgl.Marker({color:"#ff0000"})
+  new mapboxgl.Marker({color:"#b26cff"})
     .setLngLat(s.coords)
     .setPopup(new mapboxgl.Popup().setText(s.name))
     .addTo(map);
 });
 
-function calculate(lng,lat){
-  let min=999;
+// click handler
+map.on("click", e=>{
+  selectedPoint=[e.lngLat.lng,e.lngLat.lat];
+  calculateNearest();
+});
+
+// ====== CALCULATE ======
+function calculateNearest(){
+  let minDist=Infinity;
   screens.forEach(s=>{
-    const dist=turf.distance(turf.point([lng,lat]),turf.point(s.coords));
-    if(dist<min){
-      min=dist;
+    const d = turf.distance(
+      turf.point(selectedPoint),
+      turf.point(s.coords),
+      {units:"kilometers"}
+    );
+    if(d<minDist){
+      minDist=d;
       selectedScreen=s;
     }
   });
-  return min;
-}
 
-function pricing(d){
-  if(d<=2)return 4000;
-  if(d<=5)return 3000;
-  return 2000;
-}
-
-map.on("click",e=>{
-  if(userMarker)userMarker.remove();
-  userMarker=new mapboxgl.Marker({color:"#007bff"})
-    .setLngLat(e.lngLat)
-    .addTo(map);
-
-  const d=calculate(e.lngLat.lng,e.lngLat.lat);
-  const p=pricing(d);
-  const eta=Math.round((d/50)*60);
-
-  document.getElementById("distance").innerText="المسافة: "+d.toFixed(2)+" كم";
-  document.getElementById("price").innerText="السعر: "+p+" ريال";
-  document.getElementById("eta").innerText="وقت الوصول: "+eta+" دقيقة";
-
-  const name=document.getElementById("business").value||"إعلانك هنا";
-  document.getElementById("previewBox").innerText=name;
-});
-
-function submitOrder(){
-  if(!selectedScreen){
-    alert("حدد موقع أولاً");
+  if(minDist>10){
+    document.getElementById("infoBox").innerHTML="خارج نطاق 10 دقائق ❌";
     return;
   }
-  const name=document.getElementById("business").value;
-  const price=document.getElementById("price").innerText;
 
-  const msg=encodeURIComponent(
-    "طلب حجز إعلان\n"+
-    "المنشأة: "+name+"\n"+
-    price+"\n"+
-    "الشاشة: "+selectedScreen.name
+  let price = minDist<=2?4000:minDist<=5?3000:2000;
+  document.getElementById("screenName").innerText=selectedScreen.name;
+  document.getElementById("priceBox").innerText="السعر: "+price+" ريال";
+  document.getElementById("infoBox").innerHTML=
+    "أقرب شاشة: "+selectedScreen.name+
+    "<br>المسافة: "+minDist.toFixed(2)+" كم";
+}
+
+// ====== SUBMIT ======
+function submitAd(){
+  if(!selectedScreen||!selectedPoint){
+    alert("اختر موقع أولاً");
+    return;
+  }
+
+  const name=document.getElementById("name").value;
+  const date=document.getElementById("startDate").value;
+  const time=document.getElementById("timeSlot").value;
+
+  const message=
+`طلب إعلان جديد 🚀
+المنشأة: ${name}
+الشاشة: ${selectedScreen.name}
+التاريخ: ${date}
+الوقت: ${time}
+الموقع:
+https://maps.google.com/?q=${selectedPoint[1]},${selectedPoint[0]}`;
+
+  // Telegram
+  fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      chat_id:TELEGRAM_CHAT_ID,
+      text:message
+    })
+  });
+
+  // WhatsApp
+  window.open(
+    `https://wa.me/966583611252?text=${encodeURIComponent(message)}`,
+    "_blank"
   );
 
-  window.open("https://wa.me/966583611252?text="+msg,"_blank");
+  alert("تم إرسال الطلب 🚀");
+}
+
+// ====== UI ======
+function togglePanel(){
+  document.getElementById("panel").classList.toggle("closed");
 }
 </script>
 
