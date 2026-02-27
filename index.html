@@ -326,22 +326,9 @@ map.on("load", async ()=>{
 
     // تقريب على حدود النطاق
  const bbox = turf.bbox(fc);
-map.fitBounds(bbox, { padding: 60, duration: 700 });
-    // 🔵 إحداثيات الشاشة
-const SCREEN_POINT = [46.700351, 24.826890];
-
-// تأكد ما فيه علامة قديمة
-if (screenMarker) screenMarker.remove();
-
-// حط علامة الشاشة
-screenMarker = new mapboxgl.Marker({ color: "#00d4ff" })
-  .setLngLat(SCREEN_POINT)
-  .setPopup(
-    new mapboxgl.Popup({ offset: 15 })
-      .setText("📺 موقع الشاشة - Screen-1")
-  )
-  .addTo(map);
-// ✅ 1) حدّد إحداثيات مكان الشاشة الحقيقي (Lng, Lat)
+map.fitBounds(bbox, { padding: 60, duration: 700 });  
+    
+ // ✅ 1) حدّد إحداثيات مكان الشاشة الحقيقي (Lng, Lat)
 const SCREEN_POINT = [46.700351, 24.826890]; // غيّرها لإحداثيات شاشتك
 
 // ✅ Marker ثابت لموقع الشاشة
@@ -353,6 +340,14 @@ new mapboxgl.Marker({ color: "#00d1ff" })
   )
   .addTo(map);
 
+// حط علامة الشاشة
+screenMarker = new mapboxgl.Marker({ color: "#00d4ff" })
+  .setLngLat(SCREEN_POINT)
+  .setPopup(
+    new mapboxgl.Popup({ offset: 15 })
+      .setText("📺 موقع الشاشة - Screen-1")
+  )
+  .addTo(map);
 
 setDebug("🟢 جاهز — اضغط على الخريطة");
 setBadge("جاهز", true); 
