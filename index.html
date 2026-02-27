@@ -16,17 +16,89 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-:root{--panel-width:380px;--panel-bg:rgba(10,10,15,0.96);--accent:#4caf50;--muted:#777}
+:root{
+  --panel-width:380px;
+  --panel-bg:rgba(10,10,15,0.96);
+  --accent:#4caf50;
+  --muted:#777;
+}
+
+/* صفحة وخريطة */
 html,body{height:100%;margin:0;font-family:"Tajawal",sans-serif;background:#050509;overflow:hidden}
 #map{position:absolute;inset:0;width:100%;height:100%}
-.panel-toggle{position:fixed;right:20px;top:20px;width:46px;height:46px;background:rgba(15,15,25,0.9);border:1px solid rgba(255,255,255,0.12);border-radius:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:1000;color:#fff;font-size:22px;transition:0.18s}
-.panel-toggle:hover{transform:translateY(-2px)}
-.panel{position:fixed;right:0;top:0;width:var(--panel-width);height:100vh;max-height:100vh;background:var(--panel-bg);backdrop-filter:blur(14px);border-left:1px solid rgba(255,255,255,0.06);box-sizing:border-box;transform:translateX(100%);transition:transform .32s cubic-bezier(.2,.9,.2,1);z-index:999;display:flex;flex-direction:column;user-select:none}
-.panel.open{transform:translateX(0)}
+
+/* زر القائمة الطولي المثبت على الحافة */
+.panel-toggle{
+  position:fixed;
+  right:0;
+  top:50%;
+  transform:translateY(-50%);
+  width:56px;
+  height:140px;
+  background:linear-gradient(180deg,#111,#1b1b1f);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:12px 0 0 12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:1100;
+  cursor:pointer;
+  color:#fff;
+  font-weight:700;
+  writing-mode:vertical-rl;
+  text-orientation:mixed;
+  letter-spacing:2px;
+  box-shadow:0 6px 18px rgba(0,0,0,0.5);
+}
+
+/* عندما تكون اللوحة مفتوحة نحرّك الزر ليبقى ملتصقًا بحافة اللوحة */
+.panel-open-toggle-pos{
+  right:calc(var(--panel-width) - 18px);
+}
+
+/* responsive: على الموبايل نخلي الزر أصغر وأسفل الحافة */
+@media(max-width:768px){
+  .panel-toggle{
+    right:50%;
+    transform:translateX(50%) translateY(0);
+    top:auto;
+    bottom:18px;
+    width:64px;
+    height:46px;
+    writing-mode:horizontal-tb;
+    border-radius:14px;
+  }
+  .panel-open-toggle-pos{ right:50%; transform:translateX(50%) translateY(0); }
+}
+
+/* اللوحة */
+.panel{
+  position:fixed;
+  right:0;
+  top:0;
+  width:var(--panel-width);
+  height:100vh;
+  max-height:100vh;
+  background:var(--panel-bg);
+  backdrop-filter:blur(14px);
+  border-left:1px solid rgba(255,255,255,0.06);
+  box-sizing:border-box;
+  transform:translateX(100%);
+  transition:transform .32s cubic-bezier(.2,.9,.2,1);
+  z-index:1050;
+  display:flex;
+  flex-direction:column;
+  user-select:none;
+}
+.panel.open{ transform:translateX(0); }
+
+/* رأس وجسم اللوحة */
 .panel-header{padding:16px 14px;border-bottom:1px solid rgba(255,255,255,0.03);display:flex;align-items:center;justify-content:space-between}
 .panel-title{font-size:18px;font-weight:700;color:#fff}
 .panel-subtitle{font-size:12px;color:var(--muted)}
 .panel-body{padding:12px;overflow:auto;-webkit-overflow-scrolling:touch;flex:1 1 auto;outline:none}
+
+/* بقية الأنماط */
 .section{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);border-radius:12px;padding:12px;margin-bottom:12px}
 .section-title{font-size:13px;color:#e6e6e6;margin-bottom:8px}
 .label{color:#cfcfcf;font-size:13px;margin-bottom:6px;display:block}
@@ -44,14 +116,14 @@ button:disabled{background:#444;cursor:not-allowed}
 .status.no{background:linear-gradient(135deg,#7f0000,#b71c1c)}
 .panel-body::-webkit-scrollbar{width:8px}
 .panel-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.06);border-radius:8px}
-@media(max-width:768px){.panel{right:0;left:0;width:100%;height:60vh;bottom:0;top:auto;transform:translateY(100%);border-left:none;border-top:1px solid rgba(255,255,255,0.06);border-radius:12px 12px 0 0}.panel.open{transform:translateY(0)}.panel-toggle{right:50%;transform:translateX(50%);top:auto;bottom:18px}.panel-header{cursor:grab}}
 </style>
 </head>
 <body>
 
 <div id="map"></div>
 
-<button class="panel-toggle" id="panelToggle" aria-controls="panel" aria-expanded="false">☰</button>
+<!-- زر القائمة الطولي -->
+<button class="panel-toggle" id="panelToggle" aria-controls="panel" aria-expanded="false">القائمة</button>
 
 <div class="panel" id="panel" aria-hidden="true">
   <div class="panel-header" id="panelHeader">
@@ -120,27 +192,26 @@ button:disabled{background:#444;cursor:not-allowed}
     <div class="section">
       <div class="section-title">قائمة الأسعار حسب المسافة</div>
       <div style="color:#ddd;font-size:14px;line-height:1.6">
-        - **داخل 2 كم** من الشاشة — **4000 ريال**<br>
-        - **من 2 إلى 5 كم** — **3000 ريال**<br>
-        - **من 5 إلى 7.5 كم** — **2000 ريال**
+        - داخل 2 كم — <strong>4000 ريال</strong><br>
+        - من 2 إلى 5 كم — <strong>3000 ريال</strong><br>
+        - من 5 إلى 7.5 كم — <strong>2000 ريال</strong>
       </div>
     </div>
   </div>
 </div>
 
 <script>
-/* --- إعداد Supabase (مفتاح المشروع) --- */
+/* Supabase config */
 const supabaseUrl = "https://wtoefcpjbudkuqjmymjp.supabase.co";
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0b2VmY3BqYnVka3Vxam15bWpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMDY4NTksImV4cCI6MjA4Nzc4Mjg1OX0.SZpo2lShgfOdZqNwE74pZUjNovrjO26JE31bRs1xuvg";
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-/* --- ضع رقم واتسابك هنا بصيغة دولية بدون + (مثال للسعودية: 9665xxxxxxxx) --- */
-let ownerWhatsApp = "9665xxxxxxxx"; // غيّر هذا إلى رقمك
+/* WhatsApp owner (رقمك بصيغة دولية بدون +) */
+let ownerWhatsApp = "966583611252"; // رقمك: 0583611252 -> 966583611252
 
-/* --- تهيئة الخريطة وعناصر الصفحة --- */
 document.addEventListener('DOMContentLoaded', () => {
+  /* Mapbox init */
   mapboxgl.accessToken = "pk.eyJ1IjoibjktN3Z2IiwiYSI6ImNtbTJubnJjMDA4OGEycXNnaXN2M21lZ3QifQ.yZPWMAgrnQxnwZZdr8kwjA";
-
   const map = new mapboxgl.Map({
     container: "map",
     style: "mapbox://styles/mapbox/dark-v11",
@@ -152,6 +223,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   map.addControl(new mapboxgl.NavigationControl());
 
+  /* شاشات */
   const screens = [
     { name:"شاشة العليا", coords:[46.675,24.713], color:"#ff4444" },
     { name:"شاشة النخيل", coords:[46.72,24.77],  color:"#44ff44" },
@@ -176,6 +248,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  /* لا نغلق اللوحة عند اختيار الشاشة */
   map.on("click", (e) => {
     const pt = [e.lngLat.lng, e.lngLat.lat];
     let nearest = null, minDist = Infinity;
@@ -209,7 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   function resetCircles(){ Object.keys(circles).forEach((key,i)=>{ map.setPaintProperty("circle-"+i, "fill-opacity", 0.15); }); }
 
-  /* تهيئة عناصر النموذج */
+  /* عناصر النموذج */
   document.getElementById("startDate").setAttribute("min", new Date().toISOString().slice(0,16));
   document.getElementById("phone").addEventListener("input", ()=>{
     const v = document.getElementById("phone").value;
@@ -217,12 +290,8 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.querySelectorAll("#screenCount,#needDesign").forEach(el=>el.addEventListener("input", ()=> {
-    // إعادة حساب السعر عند تغيير عدد الشاشات أو خيار التصميم
-    // نستخدم المسافة الحالية إن وُجدت
     let currentDist = null;
-    if (selectedScreen) {
-      currentDist = turf.distance(map.getCenter(), selectedScreen.coords, { units: "kilometers" });
-    }
+    if (selectedScreen) currentDist = turf.distance(map.getCenter(), selectedScreen.coords, { units: "kilometers" });
     updatePrice(currentDist);
   }));
 
@@ -238,7 +307,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let total = base * count;
     if (needDesign) total += 800;
     document.getElementById("priceBox").innerHTML = `السعر: ${total} ريال`;
-    // احفظ السعر الحالي في عنصر dataset لسهولة الاستخدام عند الحجز
     document.getElementById("priceBox").dataset.price = total;
     document.getElementById("priceBox").dataset.base = base;
     document.getElementById("priceBox").dataset.distance = dist.toFixed(2);
@@ -246,49 +314,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* حجز */
   document.getElementById("bookBtn").addEventListener("click", async ()=>{
-    // تأكد من وجود بيانات أساسية
     const orgName = document.getElementById("orgName").value.trim();
     const orgType = document.getElementById("orgType").value;
     const startDate = document.getElementById("startDate").value;
     const phone = document.getElementById("phone").value.trim();
-
     if (!orgName || !orgType){ alert("الرجاء إدخال اسم المنشأة ونوعها."); return; }
     if (!startDate){ alert("الرجاء اختيار تاريخ ووقت البداية."); return; }
     if (!/^05\d{8}$/.test(phone)){ alert("رقم الجوال غير صحيح. يجب أن يكون بصيغة 05xxxxxxxx"); return; }
     if (!selectedScreen){ alert("الرجاء اختيار شاشة من الخريطة."); return; }
 
-    // احصل على المستخدم الحالي من Supabase
     let userEmail = null;
-    try{
-      const { data } = await supabaseClient.auth.getUser();
-      if (data && data.user) userEmail = data.user.email;
-    }catch(e){ /* تجاهل */ }
+    try{ const { data } = await supabaseClient.auth.getUser(); if (data && data.user) userEmail = data.user.email; }catch(e){}
 
-    // إذا ما فيه مستخدم مسجل، ننشئ حساب تلقائياً باستخدام البريد الموجود في حقل authEmail
     if (!userEmail){
       const emailInput = document.getElementById("authEmail").value.trim();
       if (!emailInput){ alert("الرجاء إدخال بريد إلكتروني في قسم الحساب لإنشاء حساب تلقائي."); return; }
-      // أنشئ كلمة مرور عشوائية قصيرة (سيتم إرسال رابط التفعيل عبر البريد حسب إعدادات Supabase)
       const randomPass = Math.random().toString(36).slice(-10) + "A1!";
       try{
         const { error: signUpError } = await supabaseClient.auth.signUp({ email: emailInput, password: randomPass });
-        if (signUpError){
-          // إذا فشل التسجيل (مثلاً المستخدم موجود) نحاول تسجيل الدخول بكلمة المرور العشوائية (قد يفشل) ثم نطلب من المستخدم تسجيل الدخول يدوياً
-          console.warn("signUpError:", signUpError.message);
-          alert("تعذر إنشاء حساب تلقائي. حاول تسجيل الدخول يدوياً أو تحقق من البريد.");
-          return;
-        }
-        // بعد إنشاء الحساب نأخذ البريد كـ userEmail (المستخدم قد يحتاج تفعيل البريد حسب إعدادات Supabase)
+        if (signUpError){ console.warn("signUpError:", signUpError.message); alert("تعذر إنشاء حساب تلقائي. حاول تسجيل الدخول يدوياً."); return; }
         userEmail = emailInput;
-        // نعرض تنبيه للمستخدم أن الحساب أنشئ
         alert("تم إنشاء حساب تلقائيًا. تحقق من بريدك الإلكتروني لتفعيل الحساب إذا لزم الأمر.");
-      }catch(e){
-        alert("حدث خطأ أثناء إنشاء الحساب التلقائي. حاول تسجيل الدخول يدوياً.");
-        return;
-      }
+      }catch(e){ alert("حدث خطأ أثناء إنشاء الحساب التلقائي. حاول تسجيل الدخول يدوياً."); return; }
     }
 
-    // احصل على السعر الحالي
     const priceText = document.getElementById("priceBox").textContent || "";
     const priceValue = document.getElementById("priceBox").dataset.price || null;
     const baseValue = document.getElementById("priceBox").dataset.base || null;
@@ -310,20 +359,12 @@ document.addEventListener('DOMContentLoaded', () => {
       created_at: new Date().toISOString()
     };
 
-    // حاول إدخال الحجز في جدول bookings داخل Supabase
     try{
       const { error: insertError } = await supabaseClient.from('bookings').insert([bookingData]);
-      if (insertError){
-        console.warn("Insert booking error:", insertError.message);
-        // لا نوقف العملية؛ نتابع إرسال الواتساب حتى لو لم يُخزن
-      } else {
-        console.log("Booking saved to Supabase bookings table.");
-      }
-    }catch(e){
-      console.warn("Exception inserting booking:", e);
-    }
+      if (insertError) console.warn("Insert booking error:", insertError.message);
+      else console.log("Booking saved to Supabase bookings table.");
+    }catch(e){ console.warn("Exception inserting booking:", e); }
 
-    // جهّز رسالة واتساب جاهزة لإرسالها لك (المالك)
     const owner = ownerWhatsApp || "";
     const msg = encodeURIComponent(
       `طلب حجز شاشة\n` +
@@ -338,13 +379,11 @@ document.addEventListener('DOMContentLoaded', () => {
       `رقم التواصل: ${bookingData.phone}`
     );
 
-    if (owner && owner !== "9665xxxxxxxx"){
-      // افتح واتساب في نافذة جديدة مع الرسالة موجهة لمالك النظام
+    if (owner && owner !== "966583611252"){
       window.open(`https://wa.me/${owner}?text=${msg}`, "_blank");
     } else {
-      // إذا لم يتم تعديل ownerWhatsApp، نعرض رسالة مع رابط جاهز للنسخ
-      alert("لم يتم ضبط رقم واتساب المالك. انسخ رسالة الحجز من الكونسول أو حدّث متغير ownerWhatsApp في الكود.");
-      console.log("WhatsApp message:", decodeURIComponent(msg));
+      // نفتح واتساب حتى لو كان الرقم هو رقمك؛ إذا لم ترد فتح نافذة جديدة، احذف الشرط أعلاه
+      window.open(`https://wa.me/${owner}?text=${msg}`, "_blank");
     }
 
     alert("تم استلام طلب الحجز بنجاح.\nسيتم التواصل معك لتأكيد التفاصيل.");
@@ -366,7 +405,7 @@ document.addEventListener('DOMContentLoaded', () => {
     },1000);
   }
 
-  /* auth handlers (signup/login/logout) */
+  /* auth handlers */
   document.getElementById("signupBtn").addEventListener("click", async ()=>{
     const email = document.getElementById("authEmail").value.trim();
     const pass = document.getElementById("authPassword").value.trim();
@@ -376,9 +415,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (error){ alert("خطأ في إنشاء الحساب: " + error.message); return; }
       alert("تم إنشاء الحساب بنجاح، تحقق من بريدك الإلكتروني.");
       refreshUser();
-    }catch(e){
-      alert("تعذر الاتصال بالخادم.");
-    }
+    }catch(e){ alert("تعذر الاتصال بالخادم."); }
   });
 
   document.getElementById("loginBtn").addEventListener("click", async ()=>{
@@ -390,9 +427,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (error){ alert("خطأ في تسجيل الدخول: " + error.message); return; }
       alert("تم تسجيل الدخول بنجاح");
       refreshUser();
-    }catch(e){
-      alert("تعذر الاتصال بالخادم.");
-    }
+    }catch(e){ alert("تعذر الاتصال بالخادم."); }
   });
 
   document.getElementById("logoutBtn").addEventListener("click", async ()=>{
@@ -429,10 +464,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // تهيئة أولية
   refreshUser();
 
-  /* ربط زر الفتح/الإغلاق وسلوك الإغلاق بالسحب */
+  /* زر القائمة: تحكم بالموضع ليلتصق باللوحة أو بالحافة */
   const panel = document.getElementById('panel');
   const panelToggle = document.getElementById('panelToggle');
   const closeBtn = document.getElementById('closeBtn');
@@ -442,19 +476,20 @@ document.addEventListener('DOMContentLoaded', () => {
     panel.classList.add('open');
     panel.setAttribute('aria-hidden', 'false');
     panelToggle.setAttribute('aria-expanded', 'true');
+    panelToggle.classList.add('panel-open-toggle-pos');
     setTimeout(()=>{ panelBody.focus(); }, 120);
   }
   function closePanel() {
     panel.classList.remove('open');
     panel.setAttribute('aria-hidden', 'true');
     panelToggle.setAttribute('aria-expanded', 'false');
+    panelToggle.classList.remove('panel-open-toggle-pos');
     panelToggle.focus();
   }
 
   panelToggle.addEventListener('click', (e) => { e.stopPropagation(); if (panel.classList.contains('open')) closePanel(); else openPanel(); });
   closeBtn.addEventListener('click', (e) => { e.stopPropagation(); closePanel(); });
 
-  map.on && map.on('click', () => { if (panel.classList.contains('open')) closePanel(); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && panel.classList.contains('open')) closePanel(); });
 
   // سحب لإغلاق على الموبايل
