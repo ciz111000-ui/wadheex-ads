@@ -328,13 +328,57 @@
       return input;
     }
 
-    async function loadArea() {
-      const res = await fetch(AREA_FILE, { cache: "no-store" });
-      if (!res.ok) throw new Error("ماقدرت أقرأ ملف النطاق: تأكد اسمه (screen-1.geojson) ومكانه (root)");
+   async function loadArea() {
+  const res = await fetch(AREA_FILE, { cache: "no-store" });
+  if (!res.ok) throw new Error("ما قدرت أقرأ ملف النطاق. تأكد اسمه ومساره (root).");
 
+  const geo = await res.json();
+
+  let feature = null;
+
+  // 1) لو FeatureCollection: نبحث عن أول Polygon/MultiPolygon (نتجاهل Point)
+  if (geo.type === "FeatureCollection") {
+    feature = (geo.features || []).find(f =>
+      f &&
+      f.geometry &&
+      (f.geometry.type === "Polygon" || f.geometry.type === "MultiPolygon")
+    );
+  }
+  // 2) لو Feature مباشرة
+  else if (geo.type === "Feature") {
+    if (geo.geometry && (geo.geometry.type === "Polygon" || geo.geometry.type === "MultiPolygon")) {
+      feature = geo;
+    }
+  }
+  // 3) أي شيء ثاني (غالباً غلط)
+  else {
+    throw new Error("صيغة الملف غير صحيحة. لازم FeatureCollection أو Feature.");
+  }
+
+  // ✅ هذا السطر الناقص عندك: لو ما لقى Polygon
+  if (!feature) {
+    throw new Error("ملف النطاق ما فيه Polygon/MultiPolygon. ORS أحياناً يحط Point أول شي.");
+  }
+
+  // ✅ نخزن المضلع للفحص داخل/خارج
+  areaFeature = feature;
+
+  // ✅ نخليه FeatureCollection للرسم على الخريطة
+  const areaFC = await loadArea();
+map.addSource("screen-area", { type: "geojson", data: areaFC });
+  return areaFC;
+}
       const geo = await res.json();
-      const feature = normalizeFeature(geo);
+let feature;
 
+if (geo.type === "FeatureCollection") {
+  feature = geo.features.find(f =>
+    f.geometry &&
+    (f.geometry.type === "Polygon" || f.geometry.type === "MultiPolygon")
+  );
+} else {
+  feature = geo;
+}
       areaFeature = feature;
       areaFC = { type: "FeatureCollection", features: [feature] };
       return areaFC;
