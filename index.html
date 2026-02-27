@@ -71,6 +71,25 @@ html, body {
   color: #4DA3FF;
 }
 
+.top-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.top-btn {
+  background: #123A63;
+  border: none;
+  padding: 7px 14px;
+  border-radius: 6px;
+  color: #F2F6FA;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.top-btn.highlight {
+  background: #1E5A8A;
+}
+
 /* الخريطة */
 #map {
   position: absolute;
@@ -214,6 +233,17 @@ input, select {
 .mapboxgl-ctrl-geocoder {
   width: 100%;
 }
+
+/* Popup ماب بوكس */
+.mapboxgl-popup-content {
+  background: #123A63;
+  color: #F2F6FA;
+  border-radius: 8px;
+  font-family: "Inter","Cairo",sans-serif;
+}
+.mapboxgl-popup-tip {
+  border-top-color: #123A63 !important;
+}
 </style>
 </head>
 
@@ -223,6 +253,10 @@ input, select {
   <div class="brand">
     <div class="logo-icon">W</div>
     <span class="logo-text">WAMMED <span class="x">X</span></span>
+  </div>
+  <div class="top-actions">
+    <button class="top-btn">تسجيل الدخول</button>
+    <button class="top-btn highlight">إنشاء حساب</button>
   </div>
 </header>
 
@@ -250,7 +284,7 @@ input, select {
     <h3 class="card-title">إتمام الحجز</h3>
 
     <label>اسم المنشأة</label>
-    <input id="orgName" type="text" placeholder="مثال: place X ">
+    <input id="orgName" type="text" placeholder="مثال: مطعم الواحة">
 
     <label>نوع المنشأة</label>
     <select id="orgType">
@@ -317,8 +351,8 @@ const map = new mapboxgl.Map({
 
 // عناصر الواجهة
 const sidebar = document.getElementById("sidebar");
-const openSidebar = document.getElementById("openSidebar");
-const closeSidebar = document.getElementById("closeSidebar");
+const openSidebarBtn = document.getElementById("openSidebar");
+const closeSidebarBtn = document.getElementById("closeSidebar");
 const screenDetails = document.getElementById("screenDetails");
 const screenInfo = document.getElementById("screenInfo");
 const bookingSection = document.getElementById("bookingSection");
@@ -328,8 +362,8 @@ const priceBox = document.getElementById("priceBox");
 let selectedScreen = null;
 
 // فتح وإغلاق اللوحة
-openSidebar.onclick = () => sidebar.classList.add("open");
-closeSidebar.onclick = () => sidebar.classList.remove("open");
+openSidebarBtn.onclick = () => sidebar.classList.add("open");
+closeSidebarBtn.onclick = () => sidebar.classList.remove("open");
 
 // Geocoder
 const geocoder = new MapboxGeocoder({
@@ -363,7 +397,36 @@ screens.forEach(screen => {
     .setLngLat(screen.coords)
     .addTo(map);
 
-  marker.getElement().onclick = () => selectScreen(screen);
+  const popupHtml = `
+    <div style="font-size:13px">
+      <div><strong>${screen.name}</strong></div>
+      <div>السعر الأساسي: ${screen.price} ريال</div>
+      <button id="select-${screen.id}" style="
+        margin-top:8px;
+        padding:6px 10px;
+        background:#1E5A8A;
+        color:#F2F6FA;
+        border:none;
+        border-radius:4px;
+        cursor:pointer;
+        font-size:12px;
+      ">اختيار الشاشة</button>
+    </div>
+  `;
+
+  const popup = new mapboxgl.Popup({ offset: 25 })
+    .setHTML(popupHtml);
+
+  marker.setPopup(popup);
+
+  marker.getElement().addEventListener("click", () => {
+    setTimeout(() => {
+      const btn = document.getElementById(`select-${screen.id}`);
+      if (btn) {
+        btn.onclick = () => selectScreen(screen);
+      }
+    }, 50);
+  });
 });
 
 // اختيار شاشة
@@ -401,7 +464,8 @@ document.getElementById("needDesign").onchange = updatePrice;
 // إتمام الحجز (تجريبي)
 bookBtn.onclick = () => {
   if (!selectedScreen) return;
-  alert("تم إرسال طلب الحجز بنجاح على شاشة: " + selectedScreen.name);
+  const orgName = document.getElementById("orgName").value || "منشأة بدون اسم";
+  alert("تم إرسال طلب الحجز بنجاح على شاشة: " + selectedScreen.name + "\nللمنشأة: " + orgName);
 };
 
 // النطاق
