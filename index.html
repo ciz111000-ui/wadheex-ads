@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Wadmmed X — بحث ونطاق مصحح</title>
+<title>Wadmmed X — منصة الحجز الذكية</title>
 
 <!-- Mapbox -->
 <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
 <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
 
-<!-- Mapbox Geocoder (autocomplete) -->
+<!-- Mapbox Geocoder -->
 <link href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.css" rel="stylesheet" />
 <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.min.js"></script>
 
@@ -20,85 +20,282 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-:root{--panel-width:420px;--panel-bg:rgba(10,10,15,0.96);--accent:#4caf50;--muted:#777}
-html,body{height:100%;margin:0;font-family:"Tajawal",sans-serif;background:#050509;overflow:hidden}
-#map{position:absolute;inset:0;width:100%;height:100%}
-.panel-toggle{position:fixed;right:0;top:50%;transform:translateY(-50%);width:56px;height:140px;background:linear-gradient(180deg,#111,#1b1b1f);border:1px solid rgba(255,255,255,0.08);border-radius:12px 0 0 12px;display:flex;align-items:center;justify-content:center;z-index:1100;cursor:pointer;color:#fff;font-weight:700;writing-mode:vertical-rl;text-orientation:mixed;letter-spacing:2px;box-shadow:0 6px 18px rgba(0,0,0,0.5);user-select:none}
-.panel-open-toggle-pos{right:calc(var(--panel-width) - 18px)}
-@media(max-width:768px){.panel-toggle{right:50%;transform:translateX(50%) translateY(0);top:auto;bottom:18px;width:64px;height:46px;writing-mode:horizontal-tb;border-radius:14px}.panel-open-toggle-pos{right:50%;transform:translateX(50%) translateY(0)}}
-.panel{position:fixed;right:0;top:0;width:var(--panel-width);height:100vh;max-height:100vh;background:var(--panel-bg);backdrop-filter:blur(14px);border-left:1px solid rgba(255,255,255,0.06);box-sizing:border-box;transform:translateX(100%);transition:transform .32s cubic-bezier(.2,.9,.2,1);z-index:1050;display:flex;flex-direction:column;user-select:none}
-.panel.open{transform:translateX(0)}
-.panel-header{padding:16px 14px;border-bottom:1px solid rgba(255,255,255,0.03);display:flex;align-items:center;justify-content:space-between}
-.panel-title{font-size:18px;font-weight:700;color:#fff}
-.panel-subtitle{font-size:12px;color:var(--muted)}
-.panel-body{padding:12px;overflow:auto;-webkit-overflow-scrolling:touch;flex:1 1 auto;outline:none}
-.section{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);border-radius:12px;padding:12px;margin-bottom:12px}
-.section-title{font-size:13px;color:#e6e6e6;margin-bottom:8px}
-.label{color:#cfcfcf;font-size:13px;margin-bottom:6px;display:block}
-input,select,button,textarea{font-size:14px}
-input,select,textarea{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(10,10,18,0.9);color:#fff;box-sizing:border-box;margin-bottom:8px}
-input::placeholder{color:var(--muted)}
-input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(76,175,80,0.06)}
-button{width:100%;padding:11px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--accent),#66bb6a);color:#fff;cursor:pointer}
-button:disabled{background:#444;cursor:not-allowed}
-.btn-secondary{background:linear-gradient(135deg,#3949ab,#5c6bc0)}
-.small{padding:8px;font-size:13px;border-radius:8px}
-.price-box{padding:10px;border-radius:10px;background:rgba(0,0,0,0.45);color:#fff;text-align:center;border:1px solid rgba(255,255,255,0.06);margin-bottom:8px}
-.countdown-box{padding:8px;border-radius:8px;background:rgba(255,255,255,0.02);color:#ddd;text-align:center;border:1px dashed rgba(255,255,255,0.06)}
-.status{padding:10px;border-radius:8px;text-align:center;font-weight:600;color:#fff;margin-bottom:10px}
-.status.ok{background:linear-gradient(135deg,#1b5e20,#2e7d32)}
-.status.no{background:linear-gradient(135deg,#7f0000,#b71c1c)}
-.search-item{padding:8px;border-radius:8px;background:rgba(255,255,255,0.02);margin-bottom:6px;cursor:pointer}
-.avail-list{font-size:13px;color:#ddd}
-.panel-body::-webkit-scrollbar{width:8px}
-.panel-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.06);border-radius:8px}
+/* ————————————————————————————————
+   الأساسيات
+——————————————————————————————— */
+:root{
+  --panel-width:420px;
+  --panel-bg:rgba(10,10,15,0.96);
+  --accent:#4caf50;
+  --muted:#777;
+}
+html,body{
+  height:100%;
+  margin:0;
+  font-family:"Tajawal",sans-serif;
+  background:#050509;
+  overflow:hidden;
+}
+#map{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+}
+
+/* ————————————————————————————————
+   زر القائمة الطولي
+——————————————————————————————— */
+.panel-toggle{
+  position:fixed;
+  right:0;
+  top:50%;
+  transform:translateY(-50%);
+  width:56px;
+  height:140px;
+  background:linear-gradient(180deg,#111,#1b1b1f);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:12px 0 0 12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:1100;
+  cursor:pointer;
+  color:#fff;
+  font-weight:700;
+  writing-mode:vertical-rl;
+  text-orientation:mixed;
+  letter-spacing:2px;
+  box-shadow:0 6px 18px rgba(0,0,0,0.5);
+  user-select:none;
+}
+.panel-open-toggle-pos{
+  right:calc(var(--panel-width) - 18px);
+}
+@media(max-width:768px){
+  .panel-toggle{
+    right:50%;
+    transform:translateX(50%) translateY(0);
+    top:auto;
+    bottom:18px;
+    width:64px;
+    height:46px;
+    writing-mode:horizontal-tb;
+    border-radius:14px;
+  }
+  .panel-open-toggle-pos{
+    right:50%;
+    transform:translateX(50%) translateY(0);
+  }
+}
+
+/* ————————————————————————————————
+   اللوحة الجانبية
+——————————————————————————————— */
+.panel{
+  position:fixed;
+  right:0;
+  top:0;
+  width:var(--panel-width);
+  height:100vh;
+  background:var(--panel-bg);
+  backdrop-filter:blur(14px);
+  border-left:1px solid rgba(255,255,255,0.06);
+  transform:translateX(100%);
+  transition:transform .32s cubic-bezier(.2,.9,.2,1);
+  z-index:1050;
+  display:flex;
+  flex-direction:column;
+}
+.panel.open{
+  transform:translateX(0);
+}
+.panel-header{
+  padding:16px 14px;
+  border-bottom:1px solid rgba(255,255,255,0.03);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.panel-title{
+  font-size:18px;
+  font-weight:700;
+  color:#fff;
+}
+.panel-subtitle{
+  font-size:12px;
+  color:var(--muted);
+}
+.panel-body{
+  padding:12px;
+  overflow:auto;
+  flex:1;
+}
+
+/* ————————————————————————————————
+   عناصر الإدخال
+——————————————————————————————— */
+.section{
+  background:rgba(255,255,255,0.02);
+  border:1px solid rgba(255,255,255,0.04);
+  border-radius:12px;
+  padding:12px;
+  margin-bottom:12px;
+}
+.section-title{
+  font-size:13px;
+  color:#e6e6e6;
+  margin-bottom:8px;
+}
+.label{
+  color:#cfcfcf;
+  font-size:13px;
+  margin-bottom:6px;
+  display:block;
+}
+input,select,button{
+  font-size:14px;
+}
+input,select{
+  width:100%;
+  padding:10px;
+  border-radius:8px;
+  border:1px solid rgba(255,255,255,0.08);
+  background:rgba(10,10,18,0.9);
+  color:#fff;
+  margin-bottom:8px;
+}
+button{
+  width:100%;
+  padding:11px;
+  border-radius:10px;
+  border:none;
+  background:linear-gradient(135deg,var(--accent),#66bb6a);
+  color:#fff;
+  cursor:pointer;
+}
+button:disabled{
+  background:#444;
+  cursor:not-allowed;
+}
+.btn-secondary{
+  background:linear-gradient(135deg,#3949ab,#5c6bc0);
+}
+.small{
+  padding:8px;
+  font-size:13px;
+  border-radius:8px;
+}
+
+/* ————————————————————————————————
+   صناديق السعر والحالة
+——————————————————————————————— */
+.price-box{
+  padding:10px;
+  border-radius:10px;
+  background:rgba(0,0,0,0.45);
+  color:#fff;
+  text-align:center;
+  border:1px solid rgba(255,255,255,0.06);
+  margin-bottom:8px;
+}
+.countdown-box{
+  padding:8px;
+  border-radius:8px;
+  background:rgba(255,255,255,0.02);
+  color:#ddd;
+  text-align:center;
+  border:1px dashed rgba(255,255,255,0.06);
+}
+.status{
+  padding:10px;
+  border-radius:8px;
+  text-align:center;
+  font-weight:600;
+  color:#fff;
+  margin-bottom:10px;
+}
+.status.ok{
+  background:linear-gradient(135deg,#1b5e20,#2e7d32);
+}
+.status.no{
+  background:linear-gradient(135deg,#7f0000,#b71c1c);
+}
+
+/* ————————————————————————————————
+   نتائج البحث
+——————————————————————————————— */
+.search-item{
+  padding:8px;
+  border-radius:8px;
+  background:rgba(255,255,255,0.02);
+  margin-bottom:6px;
+  cursor:pointer;
+}
+.avail-list{
+  font-size:13px;
+  color:#ddd;
+}
 </style>
 </head>
+
 <body>
 
 <div id="map"></div>
 
-<button class="panel-toggle" id="panelToggle" aria-controls="panel" aria-expanded="false">القائمة</button>
+<button class="panel-toggle" id="panelToggle">القائمة</button>
 
-<div class="panel" id="panel" aria-hidden="true">
+<div class="panel" id="panel">
   <div class="panel-header">
     <div>
-      <div class="panel-title">حجز شاشة - Wadmmed X</div>
-      <div class="panel-subtitle">بحث، نطاق، تقويم وخريطة حرارية</div>
+      <div class="panel-title">Wadmmed X</div>
+      <div class="panel-subtitle">منصة الحجز الذكية</div>
     </div>
-    <div style="display:flex;gap:8px;align-items:center">
-      <button id="closeBtn" aria-label="إغلاق اللوحة" style="background:transparent;border:1px solid rgba(255,255,255,0.06);color:#fff;padding:6px 8px;border-radius:8px">إغلاق</button>
-    </div>
+    <button id="closeBtn" style="background:transparent;border:1px solid rgba(255,255,255,0.06);color:#fff;padding:6px 8px;border-radius:8px">إغلاق</button>
   </div>
 
-  <div class="panel-body" id="panelBody" tabindex="-1">
+  <div class="panel-body">
 
+    <!-- ————————————————————————————————
+         البحث (Geocoder)
+    ———————————————————————————————— -->
     <div class="section">
-      <div class="section-title">بحث مكان (اقتراحات)</div>
-      <div id="geocoder" style="margin-bottom:8px"></div>
-      <div id="placeResults"></div>
+      <div class="section-title">بحث مكان (مثل Google Maps)</div>
+      <div id="geocoder"></div>
     </div>
 
-    <div class="section" id="authSection">
+    <!-- ————————————————————————————————
+         الحساب
+    ———————————————————————————————— -->
+    <div class="section">
       <div class="section-title">الحساب</div>
+
       <label class="label">البريد الإلكتروني</label>
       <input id="authEmail" type="email" placeholder="example@mail.com">
+
       <label class="label">كلمة المرور</label>
       <input id="authPassword" type="password" placeholder="********">
+
       <div style="display:flex;gap:8px">
         <button id="loginBtn" class="btn-secondary">تسجيل الدخول</button>
         <button id="signupBtn" class="btn-secondary" style="background:#00897b">إنشاء حساب</button>
       </div>
+
       <div id="userPanel" style="display:none;margin-top:8px">
-        <div class="user-info" id="userInfo"></div>
-        <button id="logoutBtn" style="background:#c62828;margin-top:8px">تسجيل الخروج</button>
+        <div id="userInfo" style="color:#fff;margin-bottom:8px"></div>
+        <button id="logoutBtn" style="background:#c62828">تسجيل الخروج</button>
       </div>
     </div>
 
+    <!-- ————————————————————————————————
+         بيانات الحجز
+    ———————————————————————————————— -->
     <div class="section">
       <div class="section-title">بيانات الحجز</div>
+
       <label class="label">اسم المنشأة</label>
       <input id="orgName" type="text" placeholder="مثال: مطعم الواحة">
+
       <label class="label">نوع المنشأة</label>
       <select id="orgType">
         <option value="">اختر النوع</option>
@@ -108,431 +305,462 @@ button:disabled{background:#444;cursor:not-allowed}
         <option>شركة</option>
         <option>مؤسسة</option>
       </select>
+
       <label class="label">عدد الشاشات</label>
       <input id="screenCount" type="number" min="1" value="1">
+
       <label class="label">تاريخ ووقت البداية</label>
       <input id="startDate" type="datetime-local">
+
       <label class="label">مدة العرض بالدقائق</label>
       <input id="durationMinutes" type="number" min="10" value="60">
+
       <label class="label">هل تحتاج تصميم إعلان؟</label>
       <select id="needDesign">
         <option value="no">لا</option>
         <option value="yes">نعم (+800 ريال)</option>
       </select>
+
       <label class="label">رقم التواصل</label>
       <input id="phone" type="text" placeholder="05xxxxxxxx">
+
       <div class="price-box" id="priceBox">السعر: 0 ريال</div>
       <div class="countdown-box" id="countdownBox">العد التنازلي سيظهر بعد تأكيد الحجز</div>
+
       <button id="bookBtn" disabled>إتمام الحجز</button>
     </div>
 
+    <!-- ————————————————————————————————
+         نطاق + توفر
+    ———————————————————————————————— -->
     <div class="section">
-      <div class="section-title">أدوات النطاق والتوفر</div>
-      <div style="display:flex;gap:8px;margin-bottom:8px">
-        <button id="reserveRangeBtn" class="small" style="background:#2e7d32">حدد نطاق على الخريطة</button>
-        <button id="clearTempRange" class="small" style="background:#666">إزالة الدائرة</button>
-      </div>
+      <div class="section-title">النطاق والتوفر</div>
+
+      <button id="reserveRangeBtn" class="small" style="background:#2e7d32;margin-bottom:8px">حدد نطاق على الخريطة</button>
+      <button id="clearTempRange" class="small" style="background:#666;margin-bottom:8px">إزالة الدائرة</button>
+
       <div id="availabilityInfo" class="avail-list">اختر شاشة من الخريطة لعرض التوفر.</div>
     </div>
 
+    <!-- ————————————————————————————————
+         الخريطة الحرارية
+    ———————————————————————————————— -->
     <div class="section">
-      <div class="section-title">تحليلات وخرائط حرارية</div>
+      <div class="section-title">الخريطة الحرارية</div>
       <div style="display:flex;gap:8px;align-items:center">
-        <label style="color:#ddd">عرض خريطة حرارية للحجوزات</label>
+        <label style="color:#ddd">عرض الخريطة الحرارية</label>
         <input type="checkbox" id="toggleHeat">
       </div>
     </div>
 
   </div>
 </div>
-
 <script>
-/* -------------------- إعداد Supabase -------------------- */
+/* ————————————————————————————————
+   إعداد Supabase
+——————————————————————————————— */
 const supabaseUrl = "https://wtoefcpjbudkuqjmymjp.supabase.co";
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0b2VmY3BqYnVka3Vxam15bWpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMDY4NTksImV4cCI6MjA4Nzc4Mjg1OX0.SZpo2lShgfOdZqNwE74pZUjNovrjO26JE31bRs1xuvg";
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-/* WhatsApp owner */
-let ownerWhatsApp = "966583611252";
+let ownerWhatsApp = "966583611252"; // رقمك
 
-/* auth ready */
 let authReady = false;
-supabaseClient.auth.onAuthStateChange((event, session) => { authReady = true; refreshUser(); });
-async function waitAuthReady(timeout = 4000){
-  const start = Date.now();
-  while(!authReady && (Date.now() - start) < timeout){ await new Promise(r => setTimeout(r, 100)); }
-  return authReady;
+supabaseClient.auth.onAuthStateChange(() => authReady = true);
+async function waitAuthReady(){
+  while(!authReady) await new Promise(r=>setTimeout(r,100));
 }
 
-/* -------------------- Mapbox init -------------------- */
+/* ————————————————————————————————
+   Mapbox
+——————————————————————————————— */
 mapboxgl.accessToken = "pk.eyJ1IjoibjktN3Z2IiwiYSI6ImNtbTJubnJjMDA4OGEycXNnaXN2M21lZ3QifQ.yZPWMAgrnQxnwZZdr8kwjA";
+
 const map = new mapboxgl.Map({
   container: "map",
   style: "mapbox://styles/mapbox/dark-v11",
   center: [46.67,24.75],
-  zoom: 11,
-  minZoom: 9,
-  maxZoom: 16,
-  maxBounds: [[46.3,24.4],[47.1,25.1]]
+  zoom: 11
 });
 map.addControl(new mapboxgl.NavigationControl());
 
-/* شاشات */
+/* ————————————————————————————————
+   الشاشات
+——————————————————————————————— */
 const screens = [
   { name:"شاشة العليا", coords:[46.675,24.713], color:"#ff4444" },
   { name:"شاشة النخيل", coords:[46.72,24.77],  color:"#44ff44" },
   { name:"شاشة الملز",  coords:[46.71,24.65],  color:"#4488ff" }
 ];
 
-let circles = {}, selectedScreen = null;
-screens.forEach((s,i)=>{
+let selectedScreen = null;
+let circles = {};
+let searchMarker = null;
+
+/* ————————————————————————————————
+   إضافة الشاشات على الخريطة
+——————————————————————————————— */
+screens.forEach(s=>{
   const el = document.createElement("div");
-  el.style.width="20px"; el.style.height="20px"; el.style.borderRadius="50%";
-  el.style.background=s.color; el.style.boxShadow=`0 0 12px 4px ${s.color}`; el.style.cursor="pointer";
+  el.style.width="20px";
+  el.style.height="20px";
+  el.style.borderRadius="50%";
+  el.style.background=s.color;
+  el.style.boxShadow=`0 0 12px 4px ${s.color}`;
+  el.style.cursor="pointer";
+
   el.addEventListener("click", ()=> selectScreen(s));
-  new mapboxgl.Marker(el).setLngLat(s.coords).setPopup(new mapboxgl.Popup().setHTML(`<h3>${s.name}</h3><p>شاشة إعلانية ذكية</p>`)).addTo(map);
-  circles[s.name] = turf.circle(s.coords, 7.5, { steps: 80, units: "kilometers" });
+
+  new mapboxgl.Marker(el)
+    .setLngLat(s.coords)
+    .setPopup(new mapboxgl.Popup().setHTML(`<h3>${s.name}</h3>`))
+    .addTo(map);
+
+  circles[s.name] = turf.circle(s.coords, 7.5, { steps:80, units:"kilometers" });
 });
 
-/* رسم دوائر ومصدر heatmap */
-map.on("load", () => {
-  Object.keys(circles).forEach((key,i)=>{
-    map.addSource("circle-"+i, { type:"geojson", data: circles[key] });
-    map.addLayer({ id:"circle-"+i, type:"fill", source:"circle-"+i, paint:{ "fill-color":"#ffffff", "fill-opacity":0.12 } });
-  });
-  map.addSource('bookings_heat', { type: 'geojson', data: { type:'FeatureCollection', features:[] } });
-  map.addLayer({
-    id: 'bookings-heat',
-    type: 'heatmap',
-    source: 'bookings_heat',
-    maxzoom: 15,
-    paint: {
-      'heatmap-weight': ['interpolate', ['linear'], ['get', 'weight'], 0, 0, 6, 1],
-      'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 0, 1, 15, 3],
-      'heatmap-color': ['interpolate', ['linear'], ['heatmap-density'],
-        0, 'rgba(33,102,172,0)',
-        0.2, 'rgb(103,169,207)',
-        0.4, 'rgb(209,229,240)',
-        0.6, 'rgb(253,219,199)',
-        0.8, 'rgb(239,138,98)',
-        1, 'rgb(178,24,43)'],
-      'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 0, 2, 15, 20],
-      'heatmap-opacity': 0.8
-    }
-  }, 'waterway-label');
-  map.setLayoutProperty('bookings-heat', 'visibility', 'none');
-  loadBookingsAndRenderHeatmap();
-});
-
-/* -------------------- Geocoder (autocomplete) -------------------- */
+/* ————————————————————————————————
+   Geocoder (بحث مثل Google Maps)
+——————————————————————————————— */
 const geocoder = new MapboxGeocoder({
   accessToken: mapboxgl.accessToken,
   mapboxgl: mapboxgl,
-  placeholder: 'ابحث عن مكان أو عنوان',
-  proximity: map.getCenter(),
+  placeholder: "ابحث عن مكان…",
   marker: false,
-  countries: 'sa'
+  countries: "sa"
 });
-document.getElementById('geocoder').appendChild(geocoder.onAdd(map));
-geocoder.on('result', (ev) => {
-  const feature = ev.result;
-  map.flyTo({ center: feature.center, zoom: 15 });
-  selectNearestScreenByPoint(feature.center);
+document.getElementById("geocoder").appendChild(geocoder.onAdd(map));
+
+geocoder.on("result", (ev)=>{
+  const center = ev.result.center;
+
+  if (searchMarker) searchMarker.remove();
+  searchMarker = new mapboxgl.Marker({ color:"#ffcc00" })
+    .setLngLat(center)
+    .addTo(map);
+
+  map.flyTo({ center, zoom:15 });
+
+  const nearest = getNearestScreen(center);
+  if (nearest){
+    alert(`أقرب شاشة لموقعك هي: ${nearest.screen.name}`);
+    selectScreen(nearest.screen, nearest.distance);
+  }
 });
 
-/* -------------------- اختيار شاشة وتحديث السعر والتوفر -------------------- */
+/* ————————————————————————————————
+   حساب أقرب شاشة
+——————————————————————————————— */
+function getNearestScreen(point){
+  let nearest=null, minDist=Infinity;
+  screens.forEach(s=>{
+    const d = turf.distance(point, s.coords, { units:"kilometers" });
+    if (d < minDist){ minDist=d; nearest=s; }
+  });
+  return { screen:nearest, distance:minDist };
+}
+
+/* ————————————————————————————————
+   اختيار شاشة
+——————————————————————————————— */
 function selectScreen(screen, dist=null){
   selectedScreen = screen;
-  highlightCircle(screen.name);
-  const distance = dist ? parseFloat(dist.toFixed(2)) : parseFloat(turf.distance(map.getCenter(), screen.coords, { units: "kilometers" }).toFixed(2));
+
+  const distance = dist ?? turf.distance(map.getCenter(), screen.coords, { units:"kilometers" });
   const time = Math.round(distance / 7.5 * 10);
+
   updateStatus(true, screen.name, distance, time);
-  document.getElementById("bookBtn").disabled = false;
   updatePrice(distance);
-  renderAvailabilityForScreen(screen.name);
+  renderAvailability(screen.name);
+
+  document.getElementById("bookBtn").disabled = false;
 }
+
+/* ————————————————————————————————
+   حالة الشاشة
+——————————————————————————————— */
 function updateStatus(ok, name="", dist="", time=""){
-  const box = document.getElementById("statusBox") || document.getElementById("statusBox");
-  if (ok){ box && (box.className = "status ok"); box && (box.innerHTML = `${name}<br>المسافة: ${dist} كم<br>الوقت التقريبي بالسيارة: ${time} دقيقة`); }
-  else { box && (box.className = "status no"); box && (box.innerHTML = "خارج نطاق الشاشات (حوالي 10 دقائق بالسيارة)"); }
+  let box = document.getElementById("statusBox");
+  if (!box){
+    box = document.createElement("div");
+    box.id = "statusBox";
+    box.className = "status";
+    document.querySelector(".panel-body").prepend(box);
+  }
+
+  if (ok){
+    box.className = "status ok";
+    box.innerHTML = `${name}<br>المسافة: ${dist.toFixed(2)} كم<br>الوقت: ${time} دقيقة`;
+  } else {
+    box.className = "status no";
+    box.innerHTML = "خارج نطاق الشاشات";
+  }
 }
-function highlightCircle(name){
-  Object.keys(circles).forEach((key,i)=>{ map.setPaintProperty("circle-"+i, "fill-opacity", key===name ? 0.35 : 0.12); });
+
+/* ————————————————————————————————
+   حساب السعر
+——————————————————————————————— */
+function priceForDistance(d){
+  if (d <= 2) return 4000;
+  if (d <= 5) return 3000;
+  return 2000;
 }
-function resetCircles(){ Object.keys(circles).forEach((key,i)=>{ map.setPaintProperty("circle-"+i, "fill-opacity", 0.12); }); }
-function priceForDistance(distKm){ if (distKm <= 2) return 4000; if (distKm <= 5) return 3000; return 2000; }
-function updatePrice(distanceKm){
-  if(!selectedScreen){ document.getElementById("priceBox").innerHTML = "السعر: 0 ريال"; return; }
-  const count = parseInt(document.getElementById("screenCount").value||1);
+function updatePrice(dist){
+  const count = parseInt(document.getElementById("screenCount").value);
   const needDesign = document.getElementById("needDesign").value === "yes";
-  const dist = (typeof distanceKm === "number") ? distanceKm : turf.distance(map.getCenter(), selectedScreen.coords, { units: "kilometers" });
+
   const base = priceForDistance(dist);
   let total = base * count;
   if (needDesign) total += 800;
-  document.getElementById("priceBox").innerHTML = `السعر: ${total} ريال`;
-  document.getElementById("priceBox").dataset.price = total;
-  document.getElementById("priceBox").dataset.base = base;
-  document.getElementById("priceBox").dataset.distance = dist.toFixed(2);
+
+  const box = document.getElementById("priceBox");
+  box.innerHTML = `السعر: ${total} ريال`;
+
+  box.dataset.price = total;
+  box.dataset.base = base;
+  box.dataset.distance = dist.toFixed(2);
 }
 
-/* -------------------- بحث بديل (في حال أردت نتائج يدوية) -------------------- */
-async function geocodeManual(query){
-  const token = mapboxgl.accessToken;
-  const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${token}&limit=6&proximity=${map.getCenter().lng},${map.getCenter().lat}`;
-  const res = await fetch(url);
-  if(!res.ok) throw new Error("geocode failed");
-  const data = await res.json();
-  return data.features;
-}
+/* ————————————————————————————————
+   نطاق — اختيار مركز الدائرة
+——————————————————————————————— */
+let awaitingRangeCenter = false;
+let tempRangeId = "temp-range";
 
-/* -------------------- Heatmap: تحميل الحجوزات -------------------- */
-async function loadBookingsAndRenderHeatmap(){
-  try{
-    const { data, error } = await supabaseClient.from('bookings').select('id,price_value,base_price,distance_km,screen_name,created_at,phone,start_date');
-    if (error){ console.warn("loadBookings error:", error.message); return; }
-    const features = (data || []).map(b=>{
-      const s = screens.find(x=>x.name === b.screen_name);
-      const coords = s ? s.coords : [46.67,24.75];
-      const weight = b.price_value ? Math.min(6, Math.max(1, b.price_value/2000)) : 1;
-      return { type: 'Feature', properties: { weight }, geometry: { type: 'Point', coordinates: coords } };
+document.getElementById("reserveRangeBtn").addEventListener("click", ()=>{
+  alert("اضغط على الخريطة لتحديد مركز النطاق");
+  awaitingRangeCenter = true;
+});
+
+map.on("click", (e)=>{
+  if (awaitingRangeCenter){
+    awaitingRangeCenter = false;
+    const center = [e.lngLat.lng, e.lngLat.lat];
+    const radius = parseFloat(prompt("أدخل نصف القطر (كم):", "3"));
+    if (!radius) return;
+    handleRange(center, radius);
+    return;
+  }
+
+  const nearest = getNearestScreen([e.lngLat.lng, e.lngLat.lat]);
+  if (nearest.distance <= 7.5) selectScreen(nearest.screen, nearest.distance);
+});
+
+/* ————————————————————————————————
+   معالجة النطاق + إرسال بيانات العميل
+——————————————————————————————— */
+async function handleRange(center, radiusKm){
+  const circle = turf.circle(center, radiusKm, { steps:64, units:"kilometers" });
+
+  if (map.getSource(tempRangeId)) map.getSource(tempRangeId).setData(circle);
+  else map.addSource(tempRangeId, { type:"geojson", data:circle });
+
+  if (!map.getLayer(tempRangeId+"-fill"))
+    map.addLayer({
+      id: tempRangeId+"-fill",
+      type:"fill",
+      source: tempRangeId,
+      paint:{ "fill-color":"#ffcc00", "fill-opacity":0.12 }
     });
-    const geo = { type:'FeatureCollection', features };
-    if (map.getSource('bookings_heat')) map.getSource('bookings_heat').setData(geo);
-  }catch(e){ console.error("heatmap load error:", e); }
-}
-document.getElementById("toggleHeat").addEventListener("change", (e)=>{ const vis = e.target.checked ? 'visible' : 'none'; map.setLayoutProperty('bookings-heat', 'visibility', vis); if (e.target.checked) loadBookingsAndRenderHeatmap(); });
 
-/* -------------------- توفر الشاشة (تقويم مبسّط) -------------------- */
-async function renderAvailabilityForScreen(screenName){
-  const info = document.getElementById("availabilityInfo");
-  info.innerHTML = "جارٍ جلب الحجوزات...";
+  const pts = turf.featureCollection(
+    screens.map(s => turf.point(s.coords, { name:s.name }))
+  );
+  const inside = turf.pointsWithinPolygon(pts, circle);
+
+  if (inside.features.length === 0){
+    alert("لا توجد شاشات داخل النطاق");
+    return;
+  }
+
+  let userEmail = "غير مسجل";
+  let userPhone = document.getElementById("phone").value || "غير مدخل";
+  let userOrg   = document.getElementById("orgName").value || "غير مدخل";
+
   try{
-    const { data, error } = await supabaseClient.from('bookings').select('id,start_date,duration_minutes,price_text,phone').eq('screen_name', screenName).order('start_date', { ascending:true });
-    if (error){ console.warn("availability fetch error:", error.message); info.innerHTML = "تعذر جلب التوفر."; return; }
-    if (!data || data.length===0){ info.innerHTML = "لا توجد حجوزات حالية لهذه الشاشة."; return; }
-    const list = data.map(b=>{
-      const d = new Date(b.start_date);
-      const dur = b.duration_minutes || 60;
-      const end = new Date(d.getTime() + dur*60000);
-      return `<div style="margin-bottom:6px;padding:8px;border-radius:8px;background:rgba(255,255,255,0.02)">${d.toLocaleString()} — ${end.toLocaleString()} — ${b.phone || '-'} — ${b.price_text || '-'}</div>`;
-    }).join('');
-    info.innerHTML = `<div style="max-height:160px;overflow:auto">${list}</div>`;
-  }catch(e){ console.error(e); info.innerHTML = "خطأ أثناء جلب التوفر."; }
+    const { data } = await supabaseClient.auth.getUser();
+    if (data && data.user) userEmail = data.user.email;
+  }catch{}
+
+  let msg = `طلب حجز نطاق\n`;
+  msg += `البريد: ${userEmail}\n`;
+  msg += `رقم التواصل: ${userPhone}\n`;
+  msg += `المنشأة: ${userOrg}\n`;
+  msg += `المركز: ${center[1].toFixed(5)}, ${center[0].toFixed(5)}\n`;
+  msg += `نصف القطر: ${radiusKm} كم\n\n`;
+  msg += `الشاشات داخل النطاق:\n`;
+
+  inside.features.forEach(f=>{
+    const s = screens.find(x=>x.name===f.properties.name);
+    const d = turf.distance(center, s.coords, { units:"kilometers" });
+    msg += `- ${s.name} (${d.toFixed(2)} كم) — ${priceForDistance(d)} ريال\n`;
+  });
+
+  window.open(`https://wa.me/${ownerWhatsApp}?text=${encodeURIComponent(msg)}`, "_blank");
+  alert("تم إرسال طلب النطاق مع بيانات العميل");
 }
 
-/* -------------------- منع تداخل الحجز -------------------- */
-async function isOverlapping(screenName, newStartISO, durationMinutes){
-  try{
-    const newStart = new Date(newStartISO);
-    const newEnd = new Date(newStart.getTime() + durationMinutes*60000);
-    const { data, error } = await supabaseClient.from('bookings').select('start_date,duration_minutes').eq('screen_name', screenName);
-    if (error){ console.warn("overlap fetch error:", error.message); return false; }
-    for (const b of (data||[])){
-      const s = new Date(b.start_date);
-      const dur = b.duration_minutes ? parseInt(b.duration_minutes) : 60;
-      const e = new Date(s.getTime() + dur*60000);
-      if (newStart < e && s < newEnd) return true;
-    }
-    return false;
-  }catch(e){ console.error(e); return false; }
+/* ————————————————————————————————
+   التوفر
+——————————————————————————————— */
+async function renderAvailability(screenName){
+  const box = document.getElementById("availabilityInfo");
+  box.innerHTML = "جارٍ التحميل…";
+
+  const { data } = await supabaseClient
+    .from("bookings")
+    .select("start_date,duration_minutes,phone")
+    .eq("screen_name", screenName)
+    .order("start_date");
+
+  if (!data || data.length === 0){
+    box.innerHTML = "لا توجد حجوزات لهذه الشاشة";
+    return;
+  }
+
+  box.innerHTML = data.map(b=>{
+    const s = new Date(b.start_date);
+    const e = new Date(s.getTime() + (b.duration_minutes||60)*60000);
+    return `<div style="margin-bottom:6px;padding:8px;background:rgba(255,255,255,0.05);border-radius:8px">
+      ${s.toLocaleString()} — ${e.toLocaleString()}<br>
+      ${b.phone}
+    </div>`;
+  }).join("");
 }
 
-/* -------------------- حجز محسّن -------------------- */
+/* ————————————————————————————————
+   منع تداخل الحجوزات
+——————————————————————————————— */
+async function isOverlapping(screenName, startISO, duration){
+  const newStart = new Date(startISO);
+  const newEnd = new Date(newStart.getTime() + duration*60000);
+
+  const { data } = await supabaseClient
+    .from("bookings")
+    .select("start_date,duration_minutes")
+    .eq("screen_name", screenName);
+
+  for (const b of data){
+    const s = new Date(b.start_date);
+    const e = new Date(s.getTime() + (b.duration_minutes||60)*60000);
+    if (newStart < e && s < newEnd) return true;
+  }
+  return false;
+}
+
+/* ————————————————————————————————
+   تنفيذ الحجز
+——————————————————————————————— */
 document.getElementById("bookBtn").addEventListener("click", async ()=>{
-  if (!await waitAuthReady()){ alert("جاري تهيئة المصادقة، أعد المحاولة بعد لحظة."); return; }
+
+  if (!selectedScreen){
+    alert("اختر شاشة أولاً");
+    return;
+  }
+
   const orgName = document.getElementById("orgName").value.trim();
   const orgType = document.getElementById("orgType").value;
   const startDate = document.getElementById("startDate").value;
   const phone = document.getElementById("phone").value.trim();
-  const durationMinutes = parseInt(document.getElementById("durationMinutes").value||60);
-  if (!orgName || !orgType){ alert("الرجاء إدخال اسم المنشأة ونوعها."); return; }
-  if (!startDate){ alert("الرجاء اختيار تاريخ ووقت البداية."); return; }
-  if (!/^05\d{8}$/.test(phone)){ alert("رقم الجوال غير صحيح. يجب أن يكون بصيغة 05xxxxxxxx"); return; }
-  if (!selectedScreen){ alert("الرجاء اختيار شاشة من الخريطة."); return; }
+  const duration = parseInt(document.getElementById("durationMinutes").value);
 
-  const overlap = await isOverlapping(selectedScreen.name, startDate, durationMinutes);
-  if (overlap){ alert("يوجد حجز متداخل في نفس الفترة. اختر وقتًا آخر أو راجع التوفر."); return; }
-
-  let userEmail = null;
-  try{ const { data } = await supabaseClient.auth.getUser(); if (data && data.user) userEmail = data.user.email; }catch(e){}
-  if (!userEmail){
-    const emailInput = document.getElementById("authEmail").value.trim();
-    if (!emailInput){ alert("الرجاء إدخال بريد إلكتروني في قسم الحساب لإنشاء حساب تلقائي."); return; }
-    const tempPass = Math.random().toString(36).slice(-10) + "A1!";
-    try{ const { error } = await supabaseClient.auth.signUp({ email: emailInput, password: tempPass }); if (error){ console.warn("signup error:", error.message); alert("تعذر إنشاء حساب تلقائي. حاول تسجيل الدخول يدوياً."); return; } userEmail = emailInput; alert("تم إنشاء حساب تلقائيًا. تحقق من بريدك الإلكتروني لتفعيل الحساب إذا لزم الأمر."); }catch(err){ console.error(err); alert("خطأ أثناء إنشاء الحساب التلقائي."); return; }
+  if (!orgName || !orgType || !startDate || !/^05\d{8}$/.test(phone)){
+    alert("أكمل البيانات بشكل صحيح");
+    return;
   }
 
-  const priceText = document.getElementById("priceBox").textContent || "";
-  const priceValue = document.getElementById("priceBox").dataset.price || null;
-  const baseValue = document.getElementById("priceBox").dataset.base || null;
-  const distanceValue = document.getElementById("priceBox").dataset.distance || null;
+  if (await isOverlapping(selectedScreen.name, startDate, duration)){
+    alert("يوجد حجز متداخل");
+    return;
+  }
 
-  const bookingData = {
-    user_email: userEmail,
-    org_name: orgName,
-    org_type: orgType,
-    screen_name: selectedScreen.name,
-    screen_count: parseInt(document.getElementById("screenCount").value||1),
-    start_date: startDate,
-    duration_minutes: durationMinutes,
-    need_design: document.getElementById("needDesign").value === "yes",
-    phone,
-    price_text: priceText,
-    price_value: priceValue ? parseInt(priceValue) : null,
-    base_price: baseValue ? parseInt(baseValue) : null,
-    distance_km: distanceValue ? parseFloat(distanceValue) : null,
-    created_at: new Date().toISOString()
-  };
-
+  let userEmail = null;
   try{
-    const { error: insertError } = await supabaseClient.from('bookings').insert([bookingData]);
-    if (insertError){ console.warn("Insert booking error:", insertError.message); alert("تعذر حفظ الحجز في النظام الآن. تم إرسال تفاصيل الحجز عبر واتساب للمتابعة."); }
-    else console.log("Booking saved to Supabase bookings table.");
-  }catch(e){ console.warn("Exception inserting booking:", e); }
+    const { data } = await supabaseClient.auth.getUser();
+    if (data && data.user) userEmail = data.user.email;
+  }catch{}
 
-  const owner = ownerWhatsApp || "";
+  if (!userEmail){
+    const emailInput = document.getElementById("authEmail").value.trim();
+    if (!emailInput){
+      alert("سجّل دخول أو أدخل بريد لإنشاء حساب تلقائي");
+      return;
+    }
+    const tempPass = Math.random().toString(36).slice(-10)+"A1!";
+    await supabaseClient.auth.signUp({ email:emailInput, password:tempPass });
+    userEmail = emailInput;
+  }
+
+  const price = document.getElementById("priceBox").dataset.price;
+  const base = document.getElementById("priceBox").dataset.base;
+  const dist = document.getElementById("priceBox").dataset.distance;
+
+  await supabaseClient.from("bookings").insert([{
+    user_email:userEmail,
+    org_name:orgName,
+    org_type:orgType,
+    screen_name:selectedScreen.name,
+    screen_count:parseInt(document.getElementById("screenCount").value),
+    start_date:startDate,
+    duration_minutes:duration,
+    need_design:document.getElementById("needDesign").value==="yes",
+    phone,
+    price_text:`${price} ريال`,
+    price_value:parseInt(price),
+    base_price:parseInt(base),
+    distance_km:parseFloat(dist),
+    created_at:new Date().toISOString()
+  }]);
+
   const msg = encodeURIComponent(
-    `طلب حجز شاشة\nالمستخدم: ${bookingData.user_email}\nالمنشأة: ${bookingData.org_name} (${bookingData.org_type})\nالشاشة: ${bookingData.screen_name}\nالمسافة: ${bookingData.distance_km || '-'} كم\nالسعر: ${bookingData.price_text}\nعدد الشاشات: ${bookingData.screen_count}\nبداية العرض: ${bookingData.start_date}\nالمدة: ${bookingData.duration_minutes} دقيقة\nتصميم: ${bookingData.need_design ? 'نعم' : 'لا'}\nرقم التواصل: ${bookingData.phone}`
+    `طلب حجز شاشة\n`+
+    `المستخدم: ${userEmail}\n`+
+    `المنشأة: ${orgName} (${orgType})\n`+
+    `الشاشة: ${selectedScreen.name}\n`+
+    `السعر: ${price} ريال\n`+
+    `المسافة: ${dist} كم\n`+
+    `البداية: ${startDate}\n`+
+    `المدة: ${duration} دقيقة\n`+
+    `رقم التواصل: ${phone}`
   );
-  if (owner) window.open(`https://wa.me/${owner}?text=${msg}`, "_blank");
-  alert("تم استلام طلب الحجز بنجاح.\nسيتم التواصل معك لتأكيد التفاصيل.");
-  startCountdown(startDate);
-  loadBookingsAndRenderHeatmap();
-  renderAvailabilityForScreen(selectedScreen.name);
+
+  window.open(`https://wa.me/${ownerWhatsApp}?text=${msg}`, "_blank");
+  alert("تم إرسال طلب الحجز");
 });
 
-/* -------------------- تحميل الحجوزات بشكل دوري -------------------- */
-setInterval(loadBookingsAndRenderHeatmap, 1000*60*2);
-
-/* -------------------- عداد تنازلي -------------------- */
-let countdownInterval = null;
-function startCountdown(startDateStr){
-  const countdownBox = document.getElementById("countdownBox");
-  if (countdownInterval) clearInterval(countdownInterval);
-  const target = new Date(startDateStr);
-  if (target <= new Date()){ countdownBox.textContent = "وقت بداية الإعلان الآن أو في الماضي."; return; }
-  countdownInterval = setInterval(()=>{
-    const now = new Date(); let diff = target - now;
-    if (diff <= 0){ clearInterval(countdownInterval); countdownBox.textContent = "بدأ وقت عرض الإعلان."; return; }
-    const seconds = Math.floor(diff/1000), h = Math.floor(seconds/3600), m = Math.floor((seconds%3600)/60), s = seconds%60;
-    countdownBox.textContent = `العد التنازلي: ${h} ساعة ${m} دقيقة ${s} ثانية`;
-  },1000);
-}
-
-/* -------------------- auth handlers -------------------- */
+/* ————————————————————————————————
+   تسجيل الدخول / تسجيل جديد
+——————————————————————————————— */
 document.getElementById("signupBtn").addEventListener("click", async ()=>{
   const email = document.getElementById("authEmail").value.trim();
   const pass = document.getElementById("authPassword").value.trim();
-  if (!email || !pass){ alert("الرجاء إدخال البريد وكلمة المرور"); return; }
-  try{ const { error } = await supabaseClient.auth.signUp({ email, password: pass }); if (error){ alert("خطأ في إنشاء الحساب: " + error.message); return; } alert("تم إنشاء الحساب بنجاح، تحقق من بريدك الإلكتروني."); refreshUser(); }catch(e){ alert("تعذر الاتصال بالخادم."); console.error(e); }
+  if (!email || !pass){ alert("أدخل البريد وكلمة المرور"); return; }
+  await supabaseClient.auth.signUp({ email, password:pass });
+  alert("تم إنشاء الحساب");
 });
+
 document.getElementById("loginBtn").addEventListener("click", async ()=>{
   const email = document.getElementById("authEmail").value.trim();
   const pass = document.getElementById("authPassword").value.trim();
-  if (!email || !pass){ alert("الرجاء إدخال البريد وكلمة المرور"); return; }
-  try{ const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: pass }); if (error){ alert("خطأ في تسجيل الدخول: " + error.message); return; } alert("تم تسجيل الدخول بنجاح"); refreshUser(); }catch(e){ alert("تعذر الاتصال بالخادم."); console.error(e); }
-});
-document.getElementById("logoutBtn").addEventListener("click", async ()=>{ try{ await supabaseClient.auth.signOut(); }catch(e){ console.error(e); } window.localUser = null; refreshUser(); });
-async function refreshUser(){ try{ const { data, error } = await supabaseClient.auth.getUser(); const user = (error || !data) ? null : data.user; if (user){ document.getElementById("authForms") && (document.getElementById("authForms").style.display = "none"); document.getElementById("userPanel").style.display = "block"; document.getElementById("userInfo").textContent = "مسجل كـ: " + user.email; } else if (window.localUser){ document.getElementById("authForms") && (document.getElementById("authForms").style.display = "none"); document.getElementById("userPanel").style.display = "block"; document.getElementById("userInfo").textContent = "مسجل محلياً كـ: " + window.localUser.email; } else { document.getElementById("authForms") && (document.getElementById("authForms").style.display = "block"); document.getElementById("userPanel").style.display = "none"; } }catch(e){ console.error("refreshUser error:", e); if (window.localUser){ document.getElementById("authForms") && (document.getElementById("authForms").style.display = "none"); document.getElementById("userPanel").style.display = "block"; document.getElementById("userInfo").textContent = "مسجل محلياً كـ: " + window.localUser.email; } else { document.getElementById("authForms") && (document.getElementById("authForms").style.display = "block"); document.getElementById("userPanel").style.display = "none"; } } }
-refreshUser();
-
-/* -------------------- زر القائمة وسلوكها -------------------- */
-const panel = document.getElementById('panel');
-const panelToggle = document.getElementById('panelToggle');
-const closeBtn = document.getElementById('closeBtn');
-const panelBody = document.getElementById('panelBody');
-function openPanel(){ panel.classList.add('open'); panel.setAttribute('aria-hidden','false'); panelToggle.setAttribute('aria-expanded','true'); panelToggle.classList.add('panel-open-toggle-pos'); setTimeout(()=>panelBody.focus(),120); }
-function closePanel(){ panel.classList.remove('open'); panel.setAttribute('aria-hidden','true'); panelToggle.setAttribute('aria-expanded','false'); panelToggle.classList.remove('panel-open-toggle-pos'); panelToggle.focus(); }
-panelToggle.addEventListener('click',(e)=>{ e.stopPropagation(); if(panel.classList.contains('open')) closePanel(); else openPanel(); });
-closeBtn.addEventListener('click',(e)=>{ e.stopPropagation(); closePanel(); });
-document.addEventListener('keydown',(e)=>{ if(e.key==='Escape' && panel.classList.contains('open')) closePanel(); });
-
-/* -------------------- اختيار نطاق آمن (لا يتعارض مع اختيار الشاشة) -------------------- */
-let awaitingRangeCenter = false;
-let tempRangeId = 'temp-range';
-
-document.getElementById("reserveRangeBtn").addEventListener("click", ()=>{
-  alert("اضغط على الخريطة لتحديد مركز النطاق.");
-  awaitingRangeCenter = true;
+  const { error } = await supabaseClient.auth.signInWithPassword({ email, password:pass });
+  if (error) alert("خطأ في تسجيل الدخول");
+  else alert("تم تسجيل الدخول");
 });
 
-document.getElementById("clearTempRange").addEventListener("click", ()=>{
-  if (map.getLayer(tempRangeId+'-fill')) map.removeLayer(tempRangeId+'-fill');
-  if (map.getSource(tempRangeId)) map.removeSource(tempRangeId);
+document.getElementById("logoutBtn").addEventListener("click", async ()=>{
+  await supabaseClient.auth.signOut();
+  alert("تم تسجيل الخروج");
 });
 
-map.on('click', (e) => {
-  if (awaitingRangeCenter){
-    awaitingRangeCenter = false;
-    const center = [e.lngLat.lng, e.lngLat.lat];
-    const radius = parseFloat(prompt("أدخل نصف القطر بالكيلومترات (مثال: 3):", "3"));
-    if (!radius || isNaN(radius)){ alert("نطاق غير صالح."); return; }
-    handleRangeSelection(center, radius);
-    return;
-  }
-  // السلوك العادي: اختيار أقرب شاشة
-  const pt = [e.lngLat.lng, e.lngLat.lat];
-  let nearest = null, minDist = Infinity;
-  screens.forEach(s=>{
-    const d = turf.distance(pt, s.coords, { units: "kilometers" });
-    if (d < minDist){ minDist = d; nearest = s; }
-  });
-  if (minDist <= 7.5) selectScreen(nearest, minDist);
-  else { selectedScreen = null; updateStatus(false); resetCircles(); document.getElementById("bookBtn").disabled = true; }
-});
+/* ————————————————————————————————
+   فتح/إغلاق اللوحة
+——————————————————————————————— */
+const panel = document.getElementById("panel");
+const toggle = document.getElementById("panelToggle");
+const closeBtn = document.getElementById("closeBtn");
 
-/* -------------------- معالجة النطاق: رسم + حساب الشاشات داخل الدائرة -------------------- */
-function handleRangeSelection(center, radiusKm){
-  const circle = turf.circle(center, radiusKm, { steps: 64, units: 'kilometers' });
-  if (map.getSource(tempRangeId)) map.getSource(tempRangeId).setData(circle);
-  else map.addSource(tempRangeId, { type:'geojson', data: circle });
-  if (!map.getLayer(tempRangeId+'-fill')) map.addLayer({ id: tempRangeId+'-fill', type:'fill', source:tempRangeId, paint:{ 'fill-color':'#ffcc00','fill-opacity':0.12 } });
-
-  const points = turf.featureCollection(screens.map(s => turf.point(s.coords, { name: s.name })));
-  const ptsWithin = turf.pointsWithinPolygon(points, circle);
-  if (ptsWithin.features.length === 0){
-    alert("لا توجد شاشات داخل النطاق.");
-    setTimeout(()=>{ if (map.getLayer(tempRangeId+'-fill')) map.removeLayer(tempRangeId+'-fill'); if (map.getSource(tempRangeId)) map.removeSource(tempRangeId); }, 5000);
-    return;
-  }
-  let msg = "الشاشات داخل النطاق:\n";
-  ptsWithin.features.forEach(f=>{
-    const name = f.properties.name;
-    const s = screens.find(x=>x.name===name);
-    const dist = turf.distance(center, s.coords, { units:'kilometers' });
-    msg += `- ${name} (${dist.toFixed(2)} كم) — ${priceForDistance(dist)} ريال\n`;
-  });
-  if (confirm(msg + "\nهل تريد إرسال طلب نطاق للمالك عبر واتساب؟")){
-    const owner = ownerWhatsApp || "";
-    const details = ptsWithin.features.map(f=>{
-      const name = f.properties.name;
-      const s = screens.find(x=>x.name===name);
-      const dist = turf.distance(center, s.coords, { units:'kilometers' });
-      return `${name} — ${dist.toFixed(2)} كم — ${priceForDistance(dist)} ريال`;
-    }).join('\n');
-    const text = encodeURIComponent(`طلب حجز نطاق\nالمركز: ${center[1].toFixed(5)},${center[0].toFixed(5)}\nنصف القطر: ${radiusKm} كم\nالشاشات:\n${details}`);
-    if (owner) window.open(`https://wa.me/${owner}?text=${text}`, "_blank");
-    alert("تم إرسال طلب النطاق عبر واتساب للمتابعة.");
-  }
-  setTimeout(()=>{ if (map.getLayer(tempRangeId+'-fill')) map.removeLayer(tempRangeId+'-fill'); if (map.getSource(tempRangeId)) map.removeSource(tempRangeId); }, 10000);
-}
-
-/* -------------------- مساعدة: اختيار أقرب شاشة لنقطة -------------------- */
-function selectNearestScreenByPoint(center){
-  let nearest=null, minDist=Infinity;
-  screens.forEach(s=>{
-    const d = turf.distance(center, s.coords, { units: "kilometers" });
-    if (d < minDist){ minDist = d; nearest = s; }
-  });
-  if (nearest) selectScreen(nearest, minDist);
-}
-
-/* -------------------- تهيئة واجهة ونماذج -------------------- */
-document.getElementById("startDate").setAttribute("min", new Date().toISOString().slice(0,16));
-document.getElementById("phone").addEventListener("input", ()=>{ const v=document.getElementById("phone").value; document.getElementById("phone").style.border = /^05\d{8}$/.test(v) ? "1px solid #4caf50" : "1px solid #b71c1c"; });
-document.querySelectorAll("#screenCount,#needDesign,#durationMinutes").forEach(el=>el.addEventListener("input", ()=>{ if (selectedScreen) updatePrice(parseFloat(document.getElementById("priceBox").dataset.distance || turf.distance(map.getCenter(), selectedScreen.coords, { units:'kilometers' }))); }));
-
+toggle.onclick = ()=> panel.classList.toggle("open");
+closeBtn.onclick = ()=> panel.classList.remove("open");
 </script>
-
 </body>
 </html>
