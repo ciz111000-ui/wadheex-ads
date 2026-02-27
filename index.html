@@ -13,13 +13,10 @@
 :root{
   --bg:#0b0b15;
   --glass:rgba(15,15,25,.6);
-  --blue1:#00c6ff;
-  --blue2:#0072ff;
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:#fff;font-family:system-ui}
 
-/* ===== Header ===== */
 .header{
   height:70px;
   background:#0b0b15;
@@ -35,15 +32,13 @@ body{margin:0;background:var(--bg);color:#fff;font-family:system-ui}
 }
 .start-btn{
   padding:10px 18px;
-  background:linear-gradient(90deg,var(--blue1),var(--blue2));
+  background:linear-gradient(90deg,#00c6ff,#0072ff);
   border:none;color:#fff;border-radius:8px;cursor:pointer;
 }
 
-/* ===== Map Section ===== */
 .map-wrap{position:relative;height:calc(100vh - 70px)}
 #map{position:absolute;inset:0}
 
-/* ===== Glass Panel ===== */
 .panel{
   position:absolute; top:0; right:0;
   width:380px; height:100%;
@@ -52,15 +47,14 @@ body{margin:0;background:var(--bg);color:#fff;font-family:system-ui}
   border-left:1px solid rgba(255,255,255,.08);
   padding:22px;
   z-index:10;
-  transition:transform .35s ease;
 }
-.panel.collapsed{ transform:translateX(330px); } /* يبقى شريط صغير ظاهر */
 .panel h3{margin:0 0 12px}
-.info{margin:8px 0; opacity:.9}
+.info{margin:8px 0}
 .status{margin:10px 0; font-weight:bold}
-.panel input{
+.panel input, .panel select{
   width:100%; padding:10px; margin:6px 0;
-  background:#0f0f18; border:1px solid #222; color:#fff; border-radius:6px;
+  background:#0f0f18; border:1px solid #222;
+  color:#fff; border-radius:6px;
 }
 .panel button{
   width:100%; padding:12px; margin-top:8px;
@@ -68,24 +62,6 @@ body{margin:0;background:var(--bg);color:#fff;font-family:system-ui}
   border:none; color:#fff; border-radius:8px; cursor:pointer;
 }
 .panel button:disabled{opacity:.4}
-
-/* زر مدمج مع اللوحة */
-.toggle{
-  position:absolute; left:-38px; top:50%;
-  transform:translateY(-50%);
-  width:38px; height:80px;
-  background:rgba(20,20,35,.9);
-  border-radius:10px 0 0 10px;
-  display:flex; align-items:center; justify-content:center;
-  cursor:pointer; border:1px solid rgba(255,255,255,.08);
-}
-
-/* Mobile */
-@media(max-width:900px){
-  .panel{ width:100%; height:55%; bottom:0; top:auto; border-left:none; border-top:1px solid rgba(255,255,255,.08); }
-  .panel.collapsed{ transform:translateY(85%); }
-  .toggle{ left:50%; transform:translate(-50%,-50%); top:-18px; width:80px; height:36px; border-radius:10px 10px 0 0;}
-}
 </style>
 </head>
 <body>
@@ -102,7 +78,7 @@ body{margin:0;background:var(--bg);color:#fff;font-family:system-ui}
       <text x="10" y="55" font-size="50" font-weight="bold"
             fill="url(#grad)" style="letter-spacing:-5px">W</text>
       <text x="70" y="55" font-size="50" font-weight="bold"
-            fill="#00e0ff" style="opacity:.9">X</text>
+            fill="#00e0ff">X</text>
     </svg>
   </div>
   <button class="start-btn" onclick="scrollToMap()">ابدأ الحجز</button>
@@ -112,7 +88,6 @@ body{margin:0;background:var(--bg);color:#fff;font-family:system-ui}
   <div id="map"></div>
 
   <div class="panel" id="panel">
-    <div class="toggle" onclick="togglePanel()">☰</div>
     <h3>طلب إعلان (أسبوع)</h3>
 
     <div class="info" id="screenName">اختر موقع على الخريطة</div>
@@ -121,14 +96,24 @@ body{margin:0;background:var(--bg);color:#fff;font-family:system-ui}
     <div class="status" id="status"></div>
 
     <input id="bizName" placeholder="اسم المنشأة"/>
+
+    <label>تاريخ بداية الإعلان</label>
     <input id="startDate" type="date"/>
+
+    <label>وقت تشغيل الإعلان</label>
+    <div style="display:flex; gap:6px;">
+      <input id="startTime" type="time" style="flex:1;"/>
+      <select id="ampm" style="width:80px;">
+        <option value="AM">AM</option>
+        <option value="PM">PM</option>
+      </select>
+    </div>
 
     <button id="bookBtn" disabled onclick="confirmBooking()">تأكيد الحجز</button>
   </div>
 </section>
 
 <script>
-// ===== Mapbox Token (الموجود سابقاً) =====
 mapboxgl.accessToken="pk.eyJ1IjoibjktN3Z2IiwiYSI6ImNtbTJubnJjMDA4OGEycXNnaXN2M21lZ3QifQ.yZPWMAgrnQxnwZZdr8kwjA";
 
 const map=new mapboxgl.Map({
@@ -138,14 +123,8 @@ const map=new mapboxgl.Map({
   zoom:11
 });
 
-// Controls
 map.addControl(new mapboxgl.NavigationControl());
-map.addControl(new mapboxgl.GeolocateControl({
-  positionOptions:{ enableHighAccuracy:true },
-  trackUserLocation:true
-}));
 
-// 10 دقائق ≈ 8 كم
 const MAX_KM=8;
 
 const screens=[
@@ -154,14 +133,13 @@ const screens=[
  { name:"Screen C – الملقا",   coords:[46.70,24.78], color:"#a855f7"}
 ];
 
-let circleIds=[];
 let selected=null;
+let circleIds=[];
 
 map.on("load",()=>{
   screens.forEach((screen,i)=>{
     new mapboxgl.Marker({color:screen.color})
-      .setLngLat(screen.coords)
-      .addTo(map);
+      .setLngLat(screen.coords).addTo(map);
 
     const circle=turf.circle(screen.coords,MAX_KM,{steps:80,units:"kilometers"});
     const id="circle-"+i;
@@ -183,15 +161,6 @@ map.on("load",()=>{
 map.on("click",(e)=>{
   const point=[e.lngLat.lng,e.lngLat.lat];
 
-  if(window.userMarker) window.userMarker.remove();
-  window.userMarker=new mapboxgl.Marker({color:"#00ffff"})
-    .setLngLat(point).addTo(map);
-
-  // reset
-  circleIds.forEach(id=>{
-    map.setPaintProperty(id,"fill-opacity",0.08);
-  });
-
   let inside=[];
   screens.forEach((screen,i)=>{
     const d=turf.distance(
@@ -205,9 +174,6 @@ map.on("click",(e)=>{
   });
 
   const status=document.getElementById("status");
-  const priceBox=document.getElementById("price");
-  const durationBox=document.getElementById("duration");
-  const screenBox=document.getElementById("screenName");
   const btn=document.getElementById("bookBtn");
 
   if(inside.length===0){
@@ -221,35 +187,37 @@ map.on("click",(e)=>{
   const chosen=inside[0];
   selected=chosen;
 
-  map.setPaintProperty(circleIds[chosen.index],"fill-opacity",0.35);
-
-  const minutes=(chosen.distance/8)*10;
   let price=
     chosen.distance<=2?4000:
     chosen.distance<=5?3000:2000;
 
-  screenBox.innerText=chosen.screen.name;
-  durationBox.innerText="وقت الوصول التقريبي: "+minutes.toFixed(1)+" دقيقة";
-  priceBox.innerText="السعر: "+price+" ريال";
+  document.getElementById("screenName").innerText=chosen.screen.name;
+  document.getElementById("duration").innerText="وقت الوصول التقريبي: "+((chosen.distance/8)*10).toFixed(1)+" دقيقة";
+  document.getElementById("price").innerText="السعر: "+price+" ريال";
   status.innerText="✅ داخل نطاق 10 دقائق";
   btn.disabled=false;
-
-  document.getElementById("panel").style.borderLeft="4px solid "+chosen.screen.color;
 });
-
-function togglePanel(){
-  document.getElementById("panel").classList.toggle("collapsed");
-}
-
-function scrollToMap(){
-  document.getElementById("mapSection").scrollIntoView({behavior:"smooth"});
-}
 
 function confirmBooking(){
   if(!selected) return;
+
   const name=document.getElementById("bizName").value;
   const date=document.getElementById("startDate").value;
-  alert("تم استلام طلبك\n"+name+"\n"+selected.screen.name+"\nتاريخ البدء: "+date);
+  const time=document.getElementById("startTime").value;
+  const ampm=document.getElementById("ampm").value;
+
+  if(!name || !date || !time){
+    alert("الرجاء تعبئة جميع الحقول");
+    return;
+  }
+
+  alert(
+    "تم استلام طلبك\n\n" +
+    "اسم المنشأة: " + name + "\n" +
+    "الشاشة: " + selected.screen.name + "\n" +
+    "تاريخ البدء: " + date + "\n" +
+    "وقت التشغيل: " + time + " " + ampm
+  );
 }
 </script>
 
