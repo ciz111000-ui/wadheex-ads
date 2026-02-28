@@ -3,519 +3,1012 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>WAMMED X — منصة الحجز الذكية</title>
+<title>WAMMED X | وَميض إكس — شبكة الإعلان المحلي الذكي</title>
 
 <!-- Mapbox -->
 <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
 <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
 
-<!-- Geocoder -->
-<link href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.css" rel="stylesheet" />
-<script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.min.js"></script>
-
-<!-- Turf -->
-<script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
-
 <style>
+:root {
+  --bg-main: #02030a;
+  --bg-alt: #050719;
+  --primary: #3b82f6;
+  --primary-soft: rgba(59,130,246,0.25);
+  --accent: #8b5cf6;
+  --accent-soft: rgba(139,92,246,0.25);
+  --text-main: #f9fafb;
+  --text-muted: #9ca3af;
+  --border-soft: rgba(148,163,184,0.25);
+  --glow-blue: 0 0 30px rgba(59,130,246,0.45);
+  --glow-purple: 0 0 30px rgba(139,92,246,0.45);
+}
+
+/* Reset بسيط */
+* {
+  box-sizing: border-box;
+}
+
 html, body {
   margin: 0;
   padding: 0;
-  height: 100%;
-  background: radial-gradient(circle at top, #0f1c2e, #07101c 60%);
-  font-family: "Cairo", sans-serif;
-  color: #F2F6FA;
-  overflow: hidden;
+  background: radial-gradient(circle at top, #050816 0%, #02030a 55%, #000000 100%);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Cairo", sans-serif;
+  color: var(--text-main);
+  scroll-behavior: smooth;
 }
 
 /* شريط علوي */
-.topbar {
-  position: fixed;
+.header {
+  position: sticky;
   top: 0;
-  right: 0;
-  left: 0;
-  height: 70px;
+  z-index: 50;
+  backdrop-filter: blur(18px);
+  background: linear-gradient(to bottom, rgba(2,6,23,0.9), rgba(2,6,23,0.6), transparent);
+  border-bottom: 1px solid rgba(148,163,184,0.25);
+}
+
+.nav {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 14px 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 26px;
-  z-index: 1000;
-  background: rgba(10,20,35,0.65);
-  backdrop-filter: blur(14px);
-  border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 
-.brand {
+.nav-left {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.logo-icon {
+.logo-box {
   width: 40px;
   height: 40px;
-  background: linear-gradient(135deg, #4DA3FF, #1E5A8A);
-  color: #0B1E33;
-  font-weight: 900;
-  font-size: 22px;
-  border-radius: 10px;
+  border-radius: 14px;
+  background: radial-gradient(circle at 20% 0%, #60a5fa, #1d4ed8 40%, #0f172a 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 12px rgba(77,163,255,0.5);
+  box-shadow: var(--glow-blue);
 }
 
-.logo-text {
+.logo-box span {
+  font-weight: 800;
+  font-size: 20px;
+}
+
+.logo-text-main {
+  font-weight: 800;
+  font-size: 20px;
+  letter-spacing: 0.04em;
+}
+
+.logo-text-main span {
+  color: var(--primary);
+  text-shadow: var(--glow-blue);
+}
+
+.logo-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.nav-links {
+  display: flex;
+  gap: 18px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.nav-links a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.nav-links a:hover {
+  color: var(--primary);
+}
+
+.nav-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn {
+  border-radius: 999px;
+  border: 1px solid transparent;
+  padding: 7px 16px;
+  font-size: 13px;
+  cursor: pointer;
+  background: transparent;
+  color: var(--text-main);
+}
+
+.btn-outline {
+  border-color: rgba(148,163,184,0.4);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #2563eb, #4f46e5);
+  box-shadow: var(--glow-blue);
+}
+
+/* أقسام عامة */
+main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 20px 80px;
+}
+
+/* Hero */
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 40px;
+  align-items: center;
+  padding: 40px 0 60px;
+}
+
+.hero-left {
+  position: relative;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(59,130,246,0.4);
+  background: radial-gradient(circle at 0 0, rgba(59,130,246,0.25), transparent 60%);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.hero-badge-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: radial-gradient(circle, #22c55e, #15803d);
+}
+
+.hero-title {
+  margin-top: 18px;
+  font-size: 32px;
+  line-height: 1.4;
+  font-weight: 800;
+}
+
+.hero-title span {
+  background: linear-gradient(135deg, #60a5fa, #a855f7);
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.hero-desc {
+  margin-top: 14px;
+  font-size: 14px;
+  color: var(--text-muted);
+  max-width: 480px;
+}
+
+.hero-ctas {
+  margin-top: 22px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.hero-meta {
+  margin-top: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.hero-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hero-meta-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+/* Hero Right */
+.hero-right {
+  position: relative;
+  min-height: 260px;
+}
+
+.hero-orbit {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  border: 1px dashed rgba(148,163,184,0.25);
+  transform: rotate(-8deg);
+}
+
+.hero-core {
+  position: absolute;
+  inset: 18%;
+  border-radius: 999px;
+  background: radial-gradient(circle at 30% 0, rgba(96,165,250,0.4), transparent 55%),
+              radial-gradient(circle at 70% 100%, rgba(168,85,247,0.4), transparent 55%);
+  box-shadow: var(--glow-blue), var(--glow-purple);
+}
+
+.hero-chip {
+  position: absolute;
+  inset: 32%;
+  border-radius: 18px;
+  background: rgba(15,23,42,0.9);
+  border: 1px solid rgba(148,163,184,0.4);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 14px;
+  gap: 6px;
+}
+
+.hero-chip-title {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.hero-chip-main {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.hero-chip-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 10px;
+}
+
+.hero-chip-tag {
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(15,23,42,0.9);
+  border: 1px solid rgba(148,163,184,0.4);
+}
+
+/* أقسام */
+.section {
+  margin-top: 60px;
+}
+
+.section-header {
+  margin-bottom: 20px;
+}
+
+.section-kicker {
+  font-size: 11px;
+  color: var(--primary);
+  letter-spacing: 0.12em;
+}
+
+.section-title {
+  margin-top: 6px;
   font-size: 22px;
   font-weight: 800;
 }
 
-.logo-text .x {
-  color: #4DA3FF;
-  text-shadow: 0 0 8px #4DA3FF;
-}
-
-.top-actions {
-  display: flex;
-  gap: 10px;
-}
-
-.top-btn {
-  padding: 7px 14px;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
+.section-desc {
+  margin-top: 6px;
   font-size: 13px;
-  background: rgba(255,255,255,0.08);
-  color: #F2F6FA;
+  color: var(--text-muted);
 }
 
-.top-btn.highlight {
-  background: linear-gradient(135deg, #1E5A8A, #4DA3FF);
-  box-shadow: 0 0 10px rgba(77,163,255,0.5);
+/* كيف تعمل الشبكة */
+.steps-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 16px;
 }
 
-/* الخريطة */
-#map {
-  position: absolute;
-  top: 70px;
-  bottom: 0;
-  right: 0;
-  left: 0;
-}
-
-/* زر القائمة */
-.open-sidebar {
-  position: fixed;
-  top: 90px;
-  right: 20px;
-  background: linear-gradient(135deg, #1E5A8A, #4DA3FF);
-  color: #F2F6FA;
-  border: none;
-  padding: 12px 20px;
-  border-radius: 10px;
-  cursor: pointer;
-  z-index: 900;
-  box-shadow: 0 0 12px rgba(77,163,255,0.4);
-}
-
-/* اللوحة الجانبية */
-.sidebar {
-  position: fixed;
-  top: 70px;
-  right: -420px;
-  width: 380px;
-  height: calc(100% - 70px);
-  padding: 22px;
-  overflow-y: auto;
-  transition: 0.35s;
-  z-index: 999;
-  background: rgba(10,20,35,0.7);
-  backdrop-filter: blur(18px);
-  border-left: 1px solid rgba(255,255,255,0.08);
-}
-
-.sidebar.open {
-  right: 0;
-}
-
-.close-sidebar {
-  background: none;
-  border: none;
-  color: #4DA3FF;
-  font-size: 30px;
-  cursor: pointer;
-  float: left;
-}
-
-/* البطاقات */
-.card {
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.08);
+.step-card {
   border-radius: 14px;
-  padding: 18px;
-  margin-bottom: 18px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+  border: 1px solid var(--border-soft);
+  background: radial-gradient(circle at 0 0, rgba(59,130,246,0.18), rgba(15,23,42,0.95));
+  padding: 14px;
+  font-size: 13px;
 }
 
-.card-title {
-  margin: 0 0 12px 0;
-  font-size: 17px;
+.step-label {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.step-title {
+  margin-top: 4px;
   font-weight: 700;
 }
 
-/* الحقول */
-label {
-  font-size: 13px;
+.step-index {
+  font-size: 11px;
+  color: var(--primary);
 }
 
-input, select {
-  width: 100%;
-  padding: 10px;
-  margin: 6px 0 14px 0;
-  border-radius: 10px;
-  border: 1px solid rgba(255,255,255,0.15);
-  background: rgba(255,255,255,0.05);
-  color: #F2F6FA;
-  font-size: 14px;
-}
-
-/* الأزرار */
-.primary-btn {
-  width: 100%;
-  padding: 12px;
-  background: linear-gradient(135deg, #1E5A8A, #4DA3FF);
-  border: none;
-  border-radius: 10px;
-  color: #F2F6FA;
-  font-size: 16px;
-  cursor: pointer;
-  margin-top: 10px;
-  box-shadow: 0 0 12px rgba(77,163,255,0.4);
-}
-
-.primary-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.secondary-btn {
-  width: 100%;
-  padding: 10px;
-  background: rgba(255,255,255,0.08);
-  border: none;
-  border-radius: 10px;
-  color: #F2F6FA;
-  cursor: pointer;
-  margin-bottom: 10px;
-}
-
-.secondary-btn.danger {
-  background: rgba(255,0,0,0.25);
-}
-
-/* السعر */
-.price-box {
-  background: rgba(255,255,255,0.05);
-  padding: 12px;
-  border-radius: 10px;
-  border: 1px solid rgba(255,255,255,0.1);
-  margin-top: 10px;
-  text-align: center;
-  font-size: 16px;
-}
-
-/* النطاق */
-.range-info {
-  margin-top: 10px;
-  font-size: 14px;
-  color: #8FA3B8;
-}
-
-/* التبديل */
-.toggle {
-  display: flex;
+/* الإعلان المدعوم بالبيانات */
+.data-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 24px;
   align-items: center;
+}
+
+.data-points {
+  display: grid;
   gap: 10px;
 }
 
-/* Geocoder */
-.mapboxgl-ctrl-geocoder {
-  width: 100%;
+.data-point {
+  display: flex;
+  gap: 10px;
+  font-size: 13px;
 }
 
-/* Popup */
-.mapboxgl-popup-content {
-  background: rgba(10,20,35,0.9);
-  color: #F2F6FA;
-  border-radius: 10px;
-  border: 1px solid rgba(255,255,255,0.1);
+.data-bullet {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: radial-gradient(circle, #60a5fa, #1d4ed8);
+  margin-top: 4px;
 }
-.mapboxgl-popup-tip {
-  border-top-color: rgba(10,20,35,0.9) !important;
+
+.data-card {
+  border-radius: 16px;
+  border: 1px solid var(--border-soft);
+  background: radial-gradient(circle at 0 0, rgba(59,130,246,0.18), rgba(15,23,42,0.95));
+  padding: 16px;
+  font-size: 12px;
+}
+
+.data-bars {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.data-bar {
+  flex: 1;
+  border-radius: 999px;
+  background: linear-gradient(to top, rgba(59,130,246,0.1), rgba(59,130,246,0.7));
+  height: 40px;
+}
+
+.data-bar:nth-child(2) {
+  background: linear-gradient(to top, rgba(139,92,246,0.1), rgba(139,92,246,0.7));
+  height: 55px;
+}
+
+.data-bar:nth-child(3) {
+  background: linear-gradient(to top, rgba(56,189,248,0.1), rgba(56,189,248,0.7));
+  height: 32px;
+}
+
+/* تغطية الشبكة */
+.map-wrapper {
+  border-radius: 18px;
+  border: 1px solid var(--border-soft);
+  overflow: hidden;
+  background: #020617;
+  box-shadow: var(--glow-blue);
+}
+
+.map-header {
+  padding: 10px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  border-bottom: 1px solid rgba(15,23,42,1);
+  background: radial-gradient(circle at 0 0, rgba(59,130,246,0.18), rgba(15,23,42,1));
+}
+
+.map-header span {
+  color: var(--text-muted);
+}
+
+.map-legend {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.legend-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+}
+
+.legend-dot.screen {
+  background: #60a5fa;
+}
+
+.legend-dot.range {
+  background: #a855f7;
+}
+
+#map {
+  width: 100%;
+  height: 320px;
+}
+
+/* لماذا وَميض إكس */
+.why-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 16px;
+}
+
+.why-card {
+  border-radius: 14px;
+  border: 1px solid var(--border-soft);
+  background: radial-gradient(circle at 0 0, rgba(139,92,246,0.18), rgba(15,23,42,0.95));
+  padding: 14px;
+  font-size: 13px;
+}
+
+/* رؤيتنا */
+.vision {
+  border-radius: 18px;
+  border: 1px solid var(--border-soft);
+  padding: 18px;
+  background: radial-gradient(circle at 0 0, rgba(139,92,246,0.25), rgba(15,23,42,0.98));
+  box-shadow: var(--glow-purple);
+  font-size: 13px;
+}
+
+/* FAQ */
+.faq-list {
+  border-radius: 16px;
+  border: 1px solid var(--border-soft);
+  background: rgba(15,23,42,0.9);
+  overflow: hidden;
+}
+
+.faq-item + .faq-item {
+  border-top: 1px solid rgba(30,41,59,1);
+}
+
+.faq-question {
+  padding: 12px 14px;
+  font-size: 13px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+}
+
+.faq-question span {
+  color: var(--text-muted);
+}
+
+.faq-toggle {
+  font-size: 16px;
+  color: var(--primary);
+}
+
+.faq-answer {
+  padding: 0 14px 10px;
+  font-size: 12px;
+  color: var(--text-muted);
+  display: none;
+}
+
+/* Footer */
+.footer {
+  border-top: 1px solid rgba(30,41,59,1);
+  padding: 18px 20px 26px;
+  margin-top: 40px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.footer-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.footer-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.footer-logo {
+  width: 26px;
+  height: 26px;
+  border-radius: 9px;
+  background: radial-gradient(circle at 20% 0%, #60a5fa, #1d4ed8 40%, #0f172a 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--glow-blue);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.footer-links {
+  display: flex;
+  gap: 12px;
+}
+
+.footer-links a {
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.footer-links a:hover {
+  color: var(--primary);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .hero {
+    grid-template-columns: minmax(0,1fr);
+  }
+  .hero-right {
+    min-height: 220px;
+  }
+  .data-layout {
+    grid-template-columns: minmax(0,1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .nav-links {
+    display: none;
+  }
+  .hero-title {
+    font-size: 26px;
+  }
 }
 </style>
 </head>
 
 <body>
 
-<header class="topbar">
-  <div class="brand">
-    <div class="logo-icon">W</div>
-    <span class="logo-text">WAMMED <span class="x">X</span></span>
-  </div>
-  <div class="top-actions">
-    <button class="top-btn">تسجيل الدخول</button>
-    <button class="top-btn highlight">إنشاء حساب</button>
-  </div>
+<header class="header">
+  <nav class="nav">
+    <div class="nav-left">
+      <div class="logo-box">
+        <span>wX</span>
+      </div>
+      <div>
+        <div class="logo-text-main">WAMMED <span>X</span></div>
+        <div class="logo-sub">شبكة الإعلان المحلي الذكي</div>
+      </div>
+    </div>
+    <div class="nav-links">
+      <a href="#how">كيف تعمل الشبكة</a>
+      <a href="#data">الإعلان بالبيانات</a>
+      <a href="#coverage">تغطية الشبكة</a>
+      <a href="#why">لماذا وَميض إكس</a>
+      <a href="#faq">الأسئلة الشائعة</a>
+    </div>
+    <div class="nav-actions">
+      <button class="btn btn-outline">تسجيل الدخول</button>
+      <button class="btn btn-primary" onclick="document.getElementById('coverage').scrollIntoView({behavior:'smooth'})">
+        ابدأ الحجز الآن
+      </button>
+    </div>
+  </nav>
 </header>
 
-<div id="map"></div>
+<main>
 
-<button id="openSidebar" class="open-sidebar">القائمة</button>
-
-<aside id="sidebar" class="sidebar">
-  <button id="closeSidebar" class="close-sidebar">×</button>
-
-  <!-- البحث -->
-  <section class="card">
-    <h3 class="card-title">بحث عن موقع</h3>
-    <div id="geocoder"></div>
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-left">
+      <div class="hero-badge">
+        <div class="hero-badge-dot"></div>
+        منصة سعودية متقدمة في الإعلان الرقمي الذكي
+      </div>
+      <h1 class="hero-title">
+        نقود مستقبل الإعلان المحلي في المملكة<br />
+        <span>من لوحات تقليدية إلى شبكة ذكية نابضة</span>
+      </h1>
+      <p class="hero-desc">
+        وَميض إكس هي أول شبكة شاشات إعلانية ذكية تستهدف الجمهور داخل نطاقهم الحقيقي،
+        اعتمادًا على تحليل الموقع ووقت الوصول، لا على العشوائية.
+      </p>
+      <div class="hero-ctas">
+        <button class="btn btn-primary" onclick="document.getElementById('coverage').scrollIntoView({behavior:'smooth'})">
+          ابدأ الحجز الآن
+        </button>
+        <button class="btn btn-outline" onclick="document.getElementById('how').scrollIntoView({behavior:'smooth'})">
+          استكشف كيف تعمل الشبكة
+        </button>
+      </div>
+      <div class="hero-meta">
+        <span><span class="hero-meta-dot"></span> شركة تقنية سعودية بطموح وطني</span>
+        <span><span class="hero-meta-dot"></span> إعلان مبني على الموقع لا على الانطباع</span>
+      </div>
+    </div>
+    <div class="hero-right">
+      <div class="hero-orbit"></div>
+      <div class="hero-core"></div>
+      <div class="hero-chip">
+        <div class="hero-chip-title">شبكة وَميض إكس</div>
+        <div class="hero-chip-main">إعلان داخل نطاق 10 دقائق قيادة</div>
+        <div class="hero-chip-tags">
+          <div class="hero-chip-tag">تحليل موقع</div>
+          <div class="hero-chip-tag">وقت وصول فعلي</div>
+          <div class="hero-chip-tag">تسعير ذكي</div>
+          <div class="hero-chip-tag">شبكة قابلة للتوسع</div>
+        </div>
+      </div>
+    </div>
   </section>
 
-  <!-- تفاصيل الشاشة -->
-  <section class="card" id="screenDetails" style="display:none">
-    <h3 class="card-title">الشاشة المختارة</h3>
-    <div id="screenInfo"></div>
+  <!-- كيف تعمل الشبكة -->
+  <section id="how" class="section">
+    <div class="section-header">
+      <div class="section-kicker">كيف تعمل الشبكة</div>
+      <h2 class="section-title">من موقع نشاطك إلى ظهور إعلانك في الحي الصحيح</h2>
+      <p class="section-desc">
+        وَميض إكس لا تعرض إعلانك في كل مكان… بل في المكان الذي يعنيك فعلاً.
+      </p>
+    </div>
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-label">الخطوة 01</div>
+        <div class="step-title">نحدد موقع نشاطك بدقة</div>
+        <p>نستقبل موقع منشأتك ونحوّله إلى نقطة مرجعية داخل شبكة وَميض إكس.</p>
+        <div class="step-index">إدخال موقع النشاط</div>
+      </div>
+      <div class="step-card">
+        <div class="step-label">الخطوة 02</div>
+        <div class="step-title">نطابقك مع أقرب شاشة فعّالة</div>
+        <p>نربط نشاطك بأقرب شاشة ضمن نطاق 10 دقائق قيادة حقيقية، لا مسافة خط مستقيم.</p>
+        <div class="step-index">مطابقة ذكية</div>
+      </div>
+      <div class="step-card">
+        <div class="step-label">الخطوة 03</div>
+        <div class="step-title">نحسب وقت الوصول الفعلي</div>
+        <p>نأخذ في الاعتبار حركة الطرق، الكثافة، وسلوك التنقل داخل الحي.</p>
+        <div class="step-index">تحليل حركة</div>
+      </div>
+      <div class="step-card">
+        <div class="step-label">الخطوة 04</div>
+        <div class="step-title">نطلق إعلانك خلال أسبوع</div>
+        <p>من توقيع الاتفاق إلى ظهور إعلانك على الشبكة في أقل من 7 أيام عمل.</p>
+        <div class="step-index">تشغيل سريع</div>
+      </div>
+    </div>
   </section>
 
-  <!-- الحجز -->
-  <section class="card" id="bookingSection" style="display:none">
-    <h3 class="card-title">إتمام الحجز</h3>
-
-    <label>اسم المنشأة</label>
-    <input id="orgName" type="text" placeholder="مثال: مطعم الواحة">
-
-    <label>نوع المنشأة</label>
-    <select id="orgType">
-      <option value="">اختر النوع</option>
-      <option>مطعم</option>
-      <option>مقهى</option>
-      <option>متجر</option>
-      <option>شركة</option>
-      <option>مؤسسة</option>
-    </select>
-
-    <label>عدد الشاشات</label>
-    <input id="screenCount" type="number" min="1" value="1">
-
-    <label>تاريخ ووقت البداية</label>
-    <input id="startDate" type="datetime-local">
-
-    <label>مدة العرض بالدقائق</label>
-    <input id="durationMinutes" type="number" min="10" value="60">
-
-    <label>هل تحتاج تصميم إعلان؟</label>
-    <select id="needDesign">
-      <option value="no">لا</option>
-      <option value="yes">نعم (+800 ريال)</option>
-    </select>
-
-    <label>رقم التواصل</label>
-    <input id="phone" type="text" placeholder="05xxxxxxxx">
-
-    <div class="price-box" id="priceBox">السعر: 0 ريال</div>
-
-    <button id="bookBtn" class="primary-btn" disabled>إتمام الحجز</button>
+  <!-- الإعلان المدعوم بالبيانات -->
+  <section id="data" class="section">
+    <div class="section-header">
+      <div class="section-kicker">الإعلان المدعوم بالبيانات</div>
+      <h2 class="section-title">إعلان مبني على الموقع… لا على العشوائية</h2>
+      <p class="section-desc">
+        كل ظهور في وَميض إكس مبني على بيانات موقع، حركة، ونطاق وصول حقيقي داخل الحي.
+      </p>
+    </div>
+    <div class="data-layout">
+      <div class="data-points">
+        <div class="data-point">
+          <div class="data-bullet"></div>
+          <div>
+            <strong>استهداف داخل نطاق 10 دقائق قيادة</strong>
+            <p>نضمن أن إعلانك يظهر لمن يمكنه فعلاً الوصول إلى نشاطك خلال دقائق، لا لمن يبعد ساعة.</p>
+          </div>
+        </div>
+        <div class="data-point">
+          <div class="data-bullet"></div>
+          <div>
+            <strong>تسعير ذكي حسب المسافة والنطاق</strong>
+            <p>كل شاشة لها قيمة مختلفة حسب موقعها، كثافة الحركة، وقربها من جمهورك.</p>
+          </div>
+        </div>
+        <div class="data-point">
+          <div class="data-bullet"></div>
+          <div>
+            <strong>تحليل كثافة الحركة</strong>
+            <p>نقرأ حركة الطرق والزيارات المتوقعة حول كل شاشة، ونبني عليها قرارات التشغيل.</p>
+          </div>
+        </div>
+        <div class="data-point">
+          <div class="data-bullet"></div>
+          <div>
+            <strong>وصول حقيقي داخل الحي</strong>
+            <p>هدفنا ليس عدد مرات الظهور… بل عدد الأشخاص القادرين فعلاً على الوصول إلى نشاطك.</p>
+          </div>
+        </div>
+      </div>
+      <div class="data-card">
+        <div><strong>لوحة بيانات مبسطة</strong></div>
+        <p>تصوّر مبسط لكيفية توزيع الوصول داخل نطاق شبكتك الإعلانية.</p>
+        <div class="data-bars">
+          <div class="data-bar"></div>
+          <div class="data-bar"></div>
+          <div class="data-bar"></div>
+        </div>
+        <p style="margin-top:10px;color:var(--text-muted);">
+          كل عمود يمثل شاشة في حي مختلف، مع اختلاف في كثافة الحركة ونطاق الوصول.
+        </p>
+      </div>
+    </div>
   </section>
 
-  <!-- النطاق -->
-  <section class="card">
-    <h3 class="card-title">النطاق</h3>
-    <button id="rangeBtn" class="secondary-btn">تحديد نطاق</button>
-    <button id="clearRange" class="secondary-btn danger">مسح النطاق</button>
-    <div id="rangeInfo" class="range-info">لم يتم تحديد نطاق بعد</div>
+  <!-- تغطية الشبكة + الخريطة -->
+  <section id="coverage" class="section">
+    <div class="section-header">
+      <div class="section-kicker">تغطية الشبكة</div>
+      <h2 class="section-title">شبكة شاشات محلية… تبدأ من الرياض وتمتد وطنياً</h2>
+      <p class="section-desc">
+        خريطة تفاعلية تعرض مواقع الشاشات، نطاق كل شاشة، وقابلية التوسع في مدن المملكة.
+      </p>
+    </div>
+    <div class="map-wrapper">
+      <div class="map-header">
+        <span>شبكة وَميض إكس — عرض تجريبي</span>
+        <div class="map-legend">
+          <div class="legend-item">
+            <span class="legend-dot screen"></span><span>شاشة نشطة</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot range"></span><span>نطاق 10 دقائق قيادة</span>
+          </div>
+        </div>
+      </div>
+      <div id="map"></div>
+    </div>
   </section>
 
-  <!-- الخريطة الحرارية -->
-  <section class="card">
-    <h3 class="card-title">الخريطة الحرارية</h3>
-    <label class="toggle">
-      <input type="checkbox" id="toggleHeat">
-      <span>تفعيل الخريطة الحرارية (تجريبي)</span>
-    </label>
+  <!-- لماذا وَميض إكس -->
+  <section id="why" class="section">
+    <div class="section-header">
+      <div class="section-kicker">لماذا وَميض إكس</div>
+      <h2 class="section-title">ليست شاشة إعلان… بل بنية تحتية رقمية محلية</h2>
+      <p class="section-desc">
+        نعيد تعريف الإعلان الخارجي ليصبح جزءاً من شبكة بيانات محلية ذكية.
+      </p>
+    </div>
+    <div class="why-grid">
+      <div class="why-card">
+        <strong>لا هدر إعلاني</strong>
+        <p>إعلانك لا يظهر في أحياء لا تخدم نشاطك، بل في نطاق وصول فعلي.</p>
+      </div>
+      <div class="why-card">
+        <strong>لا ظهور خارج النطاق</strong>
+        <p>نطاق 10 دقائق قيادة هو المعيار، لا المدينة كاملة.</p>
+      </div>
+      <div class="why-card">
+        <strong>وضوح في التسعير</strong>
+        <p>كل شاشة لها تسعير واضح مبني على موقعها وقيمتها الحقيقية.</p>
+      </div>
+      <div class="why-card">
+        <strong>تشغيل سريع</strong>
+        <p>من الاتفاق إلى التشغيل خلال أسبوع واحد فقط في أغلب الحالات.</p>
+      </div>
+      <div class="why-card">
+        <strong>شبكة قابلة للتوسع</strong>
+        <p>نبدأ من الرياض، ونتوسع إلى مدن رئيسية، وصولاً إلى شبكة وطنية.</p>
+      </div>
+    </div>
   </section>
-</aside>
+
+  <!-- رؤيتنا -->
+  <section class="section">
+    <div class="section-header">
+      <div class="section-kicker">رؤيتنا</div>
+      <h2 class="section-title">نسعى لبناء أكبر شبكة إعلانات محلية ذكية في السعودية</h2>
+    </div>
+    <div class="vision">
+      <p>
+        وَميض إكس لا تنظر إلى الإعلان كمساحة على شاشة فقط، بل كبنية تحتية رقمية
+        تربط بين الأنشطة المحلية والجمهور القادر فعلاً على الوصول إليها.
+      </p>
+      <p style="margin-top:8px;">
+        نبدأ من أحياء الرياض، ثم نتحرك إلى المدن الرئيسية، وصولاً إلى شبكة وطنية
+        تغطي المملكة بشاشات ذكية، بيانات حقيقية، وتجربة إعلان محلية متقدمة.
+      </p>
+    </div>
+  </section>
+
+  <!-- الأسئلة الشائعة -->
+  <section id="faq" class="section">
+    <div class="section-header">
+      <div class="section-kicker">الأسئلة الشائعة</div>
+      <h2 class="section-title">كل ما تحتاج معرفته عن وَميض إكس</h2>
+    </div>
+    <div class="faq-list">
+      <div class="faq-item">
+        <div class="faq-question">
+          <span>ما هي وَميض إكس؟</span>
+          <span class="faq-toggle">+</span>
+        </div>
+        <div class="faq-answer">
+          وَميض إكس هي شبكة شاشات إعلانية محلية ذكية، تستهدف الجمهور داخل نطاق 10 دقائق قيادة من نشاطك،
+          بالاعتماد على تحليل الموقع والبيانات، لا على العشوائية.
+        </div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-question">
+          <span>كيف يمكن أن تساعد شبكتكم نشاطي التجاري؟</span>
+          <span class="faq-toggle">+</span>
+        </div>
+        <div class="faq-answer">
+          نعرض إعلانك في الأحياء التي يمكن لسكانها الوصول فعلياً إلى نشاطك خلال دقائق،
+          مما يزيد من احتمالية الزيارة الفعلية بدلاً من مجرد المشاهدة.
+        </div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-question">
+          <span>هل حلولكم مكلفة؟</span>
+          <span class="faq-toggle">+</span>
+        </div>
+        <div class="faq-answer">
+          التسعير مبني على قيمة الشاشة وموقعها ونطاقها، مع خيارات تناسب الأنشطة الصغيرة والمتوسطة
+          والشركات الكبرى، مع وضوح كامل في التكلفة.
+        </div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-question">
+          <span>ما هي مدة تنفيذ الحملة؟</span>
+          <span class="faq-toggle">+</span>
+        </div>
+        <div class="faq-answer">
+          في أغلب الحالات، يمكن إطلاق حملتك خلال أسبوع واحد من اعتماد المواد الإعلانية
+          وتحديد المواقع المناسبة.
+        </div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-question">
+          <span>هل يمكن تخصيص الحلول لتناسب احتياجاتي؟</span>
+          <span class="faq-toggle">+</span>
+        </div>
+        <div class="faq-answer">
+          نعم، يمكن تخصيص نطاق التغطية، مدة الحملة، نوع الشاشات، وحتى أسلوب الرسالة الإعلانية
+          بما يتناسب مع أهدافك.
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-left">
+      <div class="footer-logo">wX</div>
+      <div>وَميض إكس — حيث يصبح الإعلان ذكياً.</div>
+    </div>
+    <div class="footer-links">
+      <a href="#coverage">ابدأ الحجز</a>
+      <a href="#faq">الأسئلة الشائعة</a>
+      <a href="#">الشروط والأحكام</a>
+      <a href="#">سياسة الخصوصية</a>
+    </div>
+  </div>
+</footer>
 
 <script>
-// توكن Mapbox حقك
+// Mapbox token
 mapboxgl.accessToken = "pk.eyJ1IjoibjktN3Z2IiwiYSI6ImNtbTJubnJjMDA4OGEycXNnaXN2M21lZ3QifQ.yZPWMAgrnQxnwZZdr8kwjA";
 
 // إنشاء الخريطة
 const map = new mapboxgl.Map({
   container: "map",
   style: "mapbox://styles/mapbox/dark-v11",
-  center: [46.6753, 24.7136],
+  center: [46.6753, 24.7136], // الرياض
   zoom: 11
-});
-
-// عناصر الواجهة
-const sidebar = document.getElementById("sidebar");
-const openSidebarBtn = document.getElementById("openSidebar");
-const closeSidebarBtn = document.getElementById("closeSidebar");
-const screenDetails = document.getElementById("screenDetails");
-const screenInfo = document.getElementById("screenInfo");
-const bookingSection = document.getElementById("bookingSection");
-const bookBtn = document.getElementById("bookBtn");
-const priceBox = document.getElementById("priceBox");
-
-let selectedScreen = null;
-
-// فتح وإغلاق القائمة
-openSidebarBtn.onclick = () => sidebar.classList.add("open");
-closeSidebarBtn.onclick = () => sidebar.classList.remove("open");
-
-// Geocoder
-const geocoder = new MapboxGeocoder({
-  accessToken: mapboxgl.accessToken,
-  mapboxgl: mapboxgl,
-  marker: false,
-  placeholder: "ابحث عن موقع..."
-});
-document.getElementById("geocoder").appendChild(geocoder.onAdd(map));
-
-let searchMarker = null;
-geocoder.on("result", (e) => {
-  const coords = e.result.center;
-  if (searchMarker) searchMarker.remove();
-  searchMarker = new mapboxgl.Marker({ color: "#4DA3FF" })
-    .setLngLat(coords)
-    .addTo(map);
-  map.flyTo({ center: coords, zoom: 14 });
 });
 
 // شاشات تجريبية
 const screens = [
-  { id: 1, name: "شاشة العليا", coords: [46.675, 24.72], price: 150 },
-  { id: 2, name: "شاشة النخيل", coords: [46.68, 24.75], price: 180 },
-  { id: 3, name: "شاشة الملز", coords: [46.72, 24.68], price: 130 }
+  { id: 1, name: "شاشة شمال الرياض", coords: [46.68, 24.78] },
+  { id: 2, name: "شاشة وسط الرياض", coords: [46.70, 24.71] },
+  { id: 3, name: "شاشة شرق الرياض", coords: [46.77, 24.73] }
 ];
 
-// عرض الشاشات على الخريطة
+// إضافة الشاشات
 screens.forEach(screen => {
-  const marker = new mapboxgl.Marker({ color: "#1E5A8A" })
+  new mapboxgl.Marker({ color: "#60a5fa" })
     .setLngLat(screen.coords)
+    .setPopup(new mapboxgl.Popup({ offset: 18 }).setText(screen.name))
     .addTo(map);
+});
 
-  const popupHtml = `
-    <div style="font-size:13px">
-      <div><strong>${screen.name}</strong></div>
-      <div>السعر الأساسي: ${screen.price} ريال</div>
-      <button id="select-${screen.id}" style="
-        margin-top:8px;
-        padding:6px 10px;
-        background:#1E5A8A;
-        color:#F2F6FA;
-        border:none;
-        border-radius:4px;
-        cursor:pointer;
-        font-size:12px;
-      ">اختيار الشاشة</button>
-    </div>
-  `;
+// دائرة نطاق 10 دقائق (تقريبية)
+map.on("load", () => {
+  const center = [46.70, 24.71];
+  const radiusKm = 5; // تقريبية لنطاق 10 دقائق قيادة
 
-  const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(popupHtml);
-  marker.setPopup(popup);
+  const circle = {
+    type: "Feature",
+    geometry: {
+      type: "Polygon",
+      coordinates: [createCircleCoords(center, radiusKm, 64)]
+    }
+  };
 
-  marker.getElement().addEventListener("click", () => {
-    setTimeout(() => {
-      const btn = document.getElementById(`select-${screen.id}`);
-      if (btn) btn.onclick = () => selectScreen(screen);
-    }, 50);
+  map.addSource("rangeCircle", {
+    type: "geojson",
+    data: circle
+  });
+
+  map.addLayer({
+    id: "rangeCircle-fill",
+    type: "fill",
+    source: "rangeCircle",
+    paint: {
+      "fill-color": "#a855f7",
+      "fill-opacity": 0.18
+    }
+  });
+
+  map.addLayer({
+    id: "rangeCircle-outline",
+    type: "line",
+    source: "rangeCircle",
+    paint: {
+      "line-color": "#a855f7",
+      "line-width": 1.2
+    }
   });
 });
 
-// اختيار شاشة
-function selectScreen(screen) {
-  selectedScreen = screen;
-  sidebar.classList.add("open");
-  screenDetails.style.display = "block";
-  bookingSection.style.display = "block";
+// دالة رسم دائرة تقريبية
+function createCircleCoords(center, radiusKm, points) {
+  const coords = [];
+  const [lng, lat] = center;
+  const distanceX = radiusKm / (111.32 * Math.cos((lat * Math.PI) / 180));
+  const distanceY = radiusKm / 110.574;
 
-  screenInfo.innerHTML = `
-    <div><strong>الاسم:</strong> ${screen.name}</div>
-    <div><strong>السعر الأساسي:</strong> ${screen.price} ريال</div>
-  `;
-
-  updatePrice();
-}
-
-// حساب السعر
-function updatePrice() {
-  if (!selectedScreen) return;
-  let price = selectedScreen.price;
-  const count = Number(document.getElementById("screenCount").value || 1);
-  const needDesign = document.getElementById("needDesign").value;
-
-  price *= count;
-  if (needDesign === "yes") price += 800;
-
-  priceBox.innerHTML = `السعر: ${price} ريال`;
-  bookBtn.disabled = false;
-}
-
-document.getElementById("screenCount").oninput = updatePrice;
-document.getElementById("needDesign").onchange = updatePrice;
-
-// إتمام الحجز (تجريبي)
-bookBtn.onclick = () => {
-  if (!selectedScreen) return;
-  const orgName = document.getElementById("orgName").value || "منشأة بدون اسم";
-  alert("تم إرسال طلب الحجز على شاشة: " + selectedScreen.name + "\nللمنشأة: " + orgName);
-};
-
-// النطاق
-document.getElementById("rangeBtn").onclick = () => {
-  alert("اضغط على الخريطة لتحديد مركز النطاق");
-  map.once("click", (e) => {
-    const center = [e.lngLat.lng, e.lngLat.lat];
-    const circle = turf.circle(center, 1.5, { steps: 64, units: "kilometers" });
-
-    if (map.getSource("rangeCircle")) {
-      map.getSource("rangeCircle").setData(circle);
-    } else {
-      map.addSource("rangeCircle", {
-        type: "geojson",
-        data: circle
-      });
-      map.addLayer({
-        id: "rangeCircle",
-        type: "fill",
-        source: "rangeCircle",
-        paint: {
-          "fill-color": "#4DA3FF",
-          "fill-opacity": 0.25
-        }
-      });
-    }
-
-    document.getElementById("rangeInfo").innerHTML = "تم تحديد نطاق 1.5 كم";
-  });
-};
-
-document.getElementById("clearRange").onclick = () => {
-  if (map.getLayer("rangeCircle")) map.removeLayer("rangeCircle");
-  if (map.getSource("rangeCircle")) map.removeSource("rangeCircle");
-  document.getElementById("rangeInfo").innerHTML = "لم يتم تحديد نطاق بعد";
-};
-
-// الخريطة الحرارية (تجريبي)
-document.getElementById("toggleHeat").onchange = function () {
-  if (this.checked) {
-    alert("تم تفعيل الخريطة الحرارية (تجريبي)");
-  } else {
-    alert("تم إيقاف الخريطة الحرارية");
+  for (let i = 0; i < points; i++) {
+    const angle = (i * 360) / points;
+    const x = lng + distanceX * Math.cos((angle * Math.PI) / 180);
+    const y = lat + distanceY * Math.sin((angle * Math.PI) / 180);
+    coords.push([x, y]);
   }
-};
+  coords.push(coords[0]);
+  return coords;
+}
+
+// FAQ Accordion
+document.querySelectorAll(".faq-item").forEach(item => {
+  const q = item.querySelector(".faq-question");
+  const a = item.querySelector(".faq-answer");
+  const t = item.querySelector(".faq-toggle");
+
+  q.addEventListener("click", () => {
+    const isOpen = a.style.display === "block";
+    document.querySelectorAll(".faq-answer").forEach(el => (el.style.display = "none"));
+    document.querySelectorAll(".faq-toggle").forEach(el => (el.textContent = "+"));
+    if (!isOpen) {
+      a.style.display = "block";
+      t.textContent = "−";
+    }
+  });
+});
 </script>
 
 </body>
